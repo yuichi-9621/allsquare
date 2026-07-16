@@ -24,3 +24,13 @@ test("result is always an integer", () => {
   const r = convertMinor(1234, "EUR", "USD", 1.0837)
   expect(Number.isInteger(r)).toBe(true)
 })
+
+test("half-up holds at a float .5 boundary (1 JPY at 1.005 => 101 cents)", () => {
+  // 1 JPY * 1.005 = 1.005 USD = 100.5 cents -> half-up -> 101
+  expect(convertMinor(1, "JPY", "USD", 1.005)).toBe(101)
+})
+
+test("does not over-round just below a .5 boundary", () => {
+  // 1 JPY * 1.004 = 1.004 USD = 100.4 cents -> 100
+  expect(convertMinor(1, "JPY", "USD", 1.004)).toBe(100)
+})
