@@ -79,6 +79,10 @@ for today's date (carry-forward on non-publishing days), then stores it.
 - 201 → `Expense`
 - 400 if `split.kind === "exact"` and shares don't sum to the converted base total,
   or if `payerId`/participant ids are not group members.
+- 400 if `amountMinor` (and each exact `shares[].amountMinor`) is not a safe,
+  non-negative integer. The worker MUST call `core.assertSafeMinor` on every
+  incoming money value before persisting — `@allsquare/core` performs no input
+  validation of its own (it assumes the boundary already guarded these).
 
 ### `PATCH /api/groups/:slug/expenses/:id`
 Edit an expense. Same body as POST (all fields required — full replace). Re-freezes
@@ -108,5 +112,11 @@ Preview a frozen rate (used by the expense form to show "≈ $X" before submit).
   currency, fxRateToBase, split) and calls `core.settle` / `core.computeBalances`.
   The worker never re-derives rates for existing expenses — it passes the stored
   frozen `fxRateToBase`.
+- **Field-name seam:** the wire `SplitEqual` uses `participantIds`, but
+  `core.ExpenseInput`'s equal split uses `memberIds`. This is deliberate (wire vs
+  domain vocabulary); the worker maps `participantIds` → `memberIds` when building
+  `core.ExpenseInput`. `SplitExact.shares` (`{memberId, amountMinor}`) is identical
+  on both sides, and its `amountMinor` values are in GROUP BASE CURRENCY minor
+  units (core validates they sum to the converted base total).
 - The web app never imports `@allsquare/core`; it consumes `/settlement` output.
   (Optional later optimization: share core for optimistic UI. Out of scope v1.)
