@@ -43,4 +43,11 @@ test("addMember appends with the next sort_order and is queryable", async () => 
   const ids = await memberIds(env.DB, group!.id)
   expect(ids.has(m.id)).toBe(true)
   expect(ids.size).toBe(2)
+
+  // Re-read from D1 to confirm the atomic insert persisted sort_order = 1.
+  const reread = await getGroupState(env.DB, state.group.slug)
+  // biome-ignore lint/style/noNonNullAssertion: group was just created, guaranteed to exist
+  const zoe = reread!.members.find((mm) => mm.id === m.id)
+  // biome-ignore lint/style/noNonNullAssertion: zoe was just persisted above, guaranteed to exist
+  expect(zoe!.sortOrder).toBe(1)
 })

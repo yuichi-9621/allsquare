@@ -150,16 +150,18 @@ export async function getGroupState(db: D1Database, slug: string): Promise<Group
 
 export async function addMember(db: D1Database, groupId: string, name: string): Promise<Member> {
   const id = newId()
+  // Single atomic statement: compute the next sort_order and insert in one
+  // round trip so two concurrent adds can't read the same MAX and collide.
   const row = await db
-    .prepare("SELECT COALESCE(MAX(sort_order), -1) AS max FROM members WHERE group_id = ?")
-    .bind(groupId)
-    .first<{ max: number }>()
-  const sortOrder = (row?.max ?? -1) + 1
-  await db
-    .prepare("INSERT INTO members (id, group_id, name, sort_order) VALUES (?, ?, ?, ?)")
-    .bind(id, groupId, name, sortOrder)
-    .run()
-  return { id, name, sortOrder }
+    .prepare(
+      "INSERT INTO members (id, group_id, name, sort_order) " +
+        "SELECT ?, ?, ?, COALESCE(MAX(sort_order), -1) + 1 FROM members WHERE group_id = ? " +
+        "RETURNING sort_order",
+    )
+    .bind(id, groupId, name, groupId)
+    .first<{ sort_order: number }>()
+  if (!row) throw new Error("addMember insert returned no row")
+  return { id, name, sortOrder: row.sort_order }
 }
 
 export async function memberIds(db: D1Database, groupId: string): Promise<Set<string>> {
