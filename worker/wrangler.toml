@@ -1,0 +1,14 @@
+name = "allsquare-worker"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Provisioning note: run `pnpm --filter @allsquare/worker exec wrangler d1 create allsquare`
+# once, then paste the returned database_id below (the local Vitest/miniflare D1 is
+# simulated and ignores this id, so tests pass with the dummy value; a real id is only
+# required before `wrangler deploy` / remote migrations).
+[[d1_databases]]
+binding = "DB"
+database_name = "allsquare"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
