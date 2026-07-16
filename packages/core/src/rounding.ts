@@ -3,6 +3,8 @@ import type { Transfer } from "./settlement.js"
 
 export type RoundingStep = 1 | 10 | 100 | 1000
 
+// Deliberately lossy handover rounding: rounds each transfer to nearest step of major units
+// for convenient cash handover. Does NOT preserve zero-sum property — that is intentional.
 export function roundTransfers(
   transfers: Transfer[],
   step: RoundingStep,

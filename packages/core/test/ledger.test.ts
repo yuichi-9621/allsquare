@@ -63,3 +63,37 @@ test("exact split is honored", () => {
   expect(bal.get("bob")).toBe(-800)
   expect(bal.get("alice")).toBe(800)
 })
+
+test("settle drops transfers that round to zero", () => {
+  const jpyExpenses: ExpenseInput[] = [
+    {
+      payerId: "alice",
+      amountMinor: 6600,
+      currency: "JPY",
+      fxRateToBase: 1,
+      split: {
+        kind: "exact",
+        shares: [
+          { memberId: "alice", amountMinor: 0 },
+          { memberId: "bob", amountMinor: 6600 },
+        ],
+      },
+    },
+    {
+      payerId: "alice",
+      amountMinor: 40,
+      currency: "JPY",
+      fxRateToBase: 1,
+      split: {
+        kind: "exact",
+        shares: [
+          { memberId: "alice", amountMinor: 0 },
+          { memberId: "carol", amountMinor: 40 },
+        ],
+      },
+    },
+  ]
+  const transfers = settle(jpyExpenses, { baseCurrency: "JPY", rounding: 100 })
+  expect(transfers.every((t) => t.amountMinor > 0)).toBe(true)
+  expect(transfers).toEqual([{ from: "bob", to: "alice", amountMinor: 6600 }])
+})

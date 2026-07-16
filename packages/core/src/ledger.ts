@@ -27,7 +27,9 @@ export function computeBalances(
     const shares =
       e.split.kind === "equal"
         ? splitEqual(baseTotal, e.split.memberIds)
-        : splitExact(baseTotal, e.split.shares)
+        : // Exact-split shares are in group base currency; validated to sum to
+          // converted baseTotal at worker/API boundary.
+          splitExact(baseTotal, e.split.shares)
     add(e.payerId, baseTotal) // payer fronted the whole amount
     for (const s of shares) add(s.memberId, -s.amountMinor) // each owes their share
   }
@@ -37,5 +39,9 @@ export function computeBalances(
 export function settle(expenses: ExpenseInput[], opts: SettleOptions): Transfer[] {
   const balances = computeBalances(expenses, opts.baseCurrency)
   const transfers = minimizeTransfers(balances)
-  return roundTransfers(transfers, opts.rounding, opts.baseCurrency)
+  // Handover rounding can shrink a small transfer to 0; drop those — a
+  // "pays 0" line is noise, not an instruction.
+  return roundTransfers(transfers, opts.rounding, opts.baseCurrency).filter(
+    (t) => t.amountMinor > 0,
+  )
 }
