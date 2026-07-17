@@ -389,6 +389,159 @@ ul[aria-label="Expenses"] button[aria-label^="Delete"]:hover {
   color: var(--rose);
 }
 
+/* ---- Dashboard: trips ------------------------------------------------ */
+.lede {
+  margin-top: -0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.trip-list > li.trip {
+  padding: 0;
+  gap: 0;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.trip-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 0.95rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.12s ease;
+}
+
+.trip-open:hover {
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.trip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.trip-title {
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-currency {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.trip-position {
+  font-size: 0.9rem;
+}
+
+.trip-position--owed {
+  color: var(--lime);
+}
+
+.trip-position--owe {
+  color: var(--rose);
+}
+
+.trip-position--square {
+  color: var(--text-dim);
+}
+
+.trip-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.trip-status::before {
+  content: "●";
+  color: var(--accent);
+  font-size: 0.7em;
+}
+
+.trip-status[data-status="settled"]::before {
+  content: "✓";
+  color: var(--lime);
+  font-size: 0.9em;
+}
+
+.trip-status[data-status="unavailable"]::before {
+  content: "!";
+  color: var(--rose);
+  font-weight: 700;
+}
+
+.trip-status[data-status="loading"]::before {
+  content: "…";
+  color: var(--text-dim);
+}
+
+/* forget sits at the row's trailing edge, quiet until touched */
+.trip-forget {
+  flex: none;
+  align-self: stretch;
+  border: none;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0 0.9rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.trip-forget:hover {
+  color: var(--rose);
+  background: rgba(251, 113, 133, 0.08);
+}
+
+/* On pointer devices the row is hover-revealed to keep the list calm; on
+   touch (no hover) it stays visible since there's nothing to hover. */
+@media (hover: hover) {
+  .trip-forget {
+    opacity: 0;
+    transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
+  }
+  .trip:hover .trip-forget,
+  .trip-forget:focus-visible {
+    opacity: 1;
+  }
+}
+
+/* secondary CTA that reads like a link but sits like the primary button */
+.cta-link {
+  align-self: stretch;
+  text-align: center;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cta-link:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
 /* ---- Balance signal colouring (set in BalanceList) ------------------ */
 .balance {
   border-left: 3px solid transparent;
