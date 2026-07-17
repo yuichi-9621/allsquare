@@ -3,6 +3,14 @@ import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 
 export default defineConfig({
+  // In local dev the SPA runs on :5173 and the Worker on :8787; proxy the API
+  // so the app stays same-origin (no CORS, no VITE_API_BASE needed). In prod
+  // Pages and the Worker already share an origin, so no proxy is involved.
+  server: {
+    proxy: {
+      "/api": "http://localhost:8787",
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -12,8 +20,8 @@ export default defineConfig({
         name: "Allsquare",
         short_name: "Allsquare",
         description: "Split anything on a trip. End up all square.",
-        theme_color: "#081627",
-        background_color: "#081627",
+        theme_color: "#06150e",
+        background_color: "#06150e",
         display: "standalone",
         start_url: "/",
         icons: [

@@ -20,6 +20,11 @@ export function CreateGroup() {
 
   const addRow = () => setMemberNames((prev) => [...prev, ""])
 
+  // A group needs at least two members, so keep two rows as the floor; any
+  // extra (e.g. an accidental "Add member") can always be removed.
+  const removeRow = (index: number) =>
+    setMemberNames((prev) => (prev.length <= 2 ? prev : prev.filter((_, i) => i !== index)))
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const names = memberNames.map((n) => n.trim()).filter((n) => n !== "")
@@ -73,13 +78,27 @@ export function CreateGroup() {
       <fieldset>
         <legend>Members</legend>
         {memberNames.map((name, i) => (
-          <input
+          <div
+            className="member-row"
             // biome-ignore lint/suspicious/noArrayIndexKey: member rows are positional
             key={i}
-            aria-label={`Member ${i + 1}`}
-            value={name}
-            onChange={(e) => setName(i, e.target.value)}
-          />
+          >
+            <input
+              aria-label={`Member ${i + 1}`}
+              value={name}
+              onChange={(e) => setName(i, e.target.value)}
+            />
+            {memberNames.length > 2 ? (
+              <button
+                type="button"
+                className="row-remove"
+                aria-label={`Remove member ${i + 1}`}
+                onClick={() => removeRow(i)}
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
         ))}
         <button type="button" onClick={addRow}>
           Add member
