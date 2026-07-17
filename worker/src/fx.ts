@@ -42,7 +42,14 @@ export async function resolveRate(
     // convert TO. rates[to] is then base-per-source verbatim (no inversion).
     const res = await fetchImpl(`${FRANKFURTER}/${candidate}?base=${from}&symbols=${to}`)
     if (!res.ok) continue
-    const body = (await res.json()) as { date?: string; rates?: Record<string, number> }
+    let body: { date?: string; rates?: Record<string, number> }
+    try {
+      body = (await res.json()) as { date?: string; rates?: Record<string, number> }
+    } catch {
+      // Malformed 200 (gateway/CDN error page, truncated body): treat like a
+      // non-publishing day and carry forward, rather than throwing out of resolveRate.
+      continue
+    }
     const rate = body.rates?.[to]
     if (rate === undefined) continue
 

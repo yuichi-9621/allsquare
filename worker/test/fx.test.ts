@@ -63,3 +63,27 @@ test("throws FxUnavailableError when nothing published within the window", async
     FxUnavailableError,
   )
 })
+
+test("malformed 200 body carries forward to the previous published day", async () => {
+  // 2026-07-18 (Sat) returns a 200 with a non-JSON body; 2026-07-17 (Fri) is valid.
+  const fetchImpl = vi.fn(async (url: string) => {
+    // biome-ignore lint/style/noNonNullAssertion: URL is constructed by resolveRate, always matches
+    const date = url.match(/\/v1\/(\d{4}-\d{2}-\d{2})/)![1]
+    if (date === "2026-07-17") {
+      return new Response(JSON.stringify({ base: "JPY", date, rates: { USD: 0.0067 } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    }
+    return new Response("<html>gateway timeout</html>", { status: 200 })
+  })
+  const r = await resolveRate(env.DB, "JPY", "USD", "2026-07-18", fetchImpl)
+  expect(r).toEqual({ rate: 0.0067, rateDate: "2026-07-17" })
+})
+
+test("all-malformed window throws FxUnavailableError, not a parse error", async () => {
+  const fetchImpl = vi.fn(async () => new Response("not json", { status: 200 }))
+  await expect(resolveRate(env.DB, "JPY", "USD", "2026-07-18", fetchImpl)).rejects.toBeInstanceOf(
+    FxUnavailableError,
+  )
+})
