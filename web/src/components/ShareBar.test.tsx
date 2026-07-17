@@ -4,9 +4,8 @@ import { expect, test, vi } from "vitest"
 import { ShareBar } from "./ShareBar"
 
 test("copies the group link to the clipboard", async () => {
-  const writeText = vi.fn().mockResolvedValue(undefined)
-  Object.assign(navigator, { clipboard: { writeText } })
   const user = userEvent.setup()
+  const writeText = vi.spyOn(navigator.clipboard, "writeText")
   render(<ShareBar url="https://allsquare.app/g/abc123" />)
   await user.click(screen.getByRole("button", { name: "Copy link" }))
   expect(writeText).toHaveBeenCalledWith("https://allsquare.app/g/abc123")
