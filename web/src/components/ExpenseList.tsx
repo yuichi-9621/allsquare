@@ -13,7 +13,7 @@ export function ExpenseList({
   onDelete?: (expenseId: string) => void
 }) {
   const nameOf = new Map(members.map((m) => [m.id, m.name]))
-  if (expenses.length === 0) return <p>No expenses yet.</p>
+  if (expenses.length === 0) return <p className="empty">No expenses yet.</p>
   return (
     <ul aria-label="Expenses">
       {expenses.map((e) => {

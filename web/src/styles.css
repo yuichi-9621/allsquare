@@ -57,11 +57,65 @@ body {
   padding: clamp(1rem, 4vw, 2.75rem) 1rem;
 }
 
-/* ---- Top-level card (both routes) ------------------------------------ */
-#root > main,
-#root > form {
+/* ---- App shell: brand header + route card stacked ------------------- */
+.app {
   width: 100%;
   max-width: 30rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.35rem;
+}
+
+.brand {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+  padding-left: 1rem;
+  position: relative;
+}
+
+/* cyan "boarding" square marks the wordmark */
+.brand::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.brand:hover {
+  color: var(--cyan-bright);
+}
+
+.brand-tag {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ---- Top-level card (both routes) ------------------------------------ */
+.app > main,
+.app > form {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -70,6 +124,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  animation: rise 0.35s ease both;
 }
 
 /* ---- Nested panels --------------------------------------------------- */
@@ -101,8 +156,8 @@ h1 {
 }
 
 /* small cyan tick before the trip/app title */
-#root > main > h1::before,
-#root > form > h1::before {
+.app > main > h1::before,
+.app > form > h1::before {
   content: "";
   display: inline-block;
   width: 0.6rem;
@@ -112,6 +167,7 @@ h1 {
   background: var(--cyan);
   box-shadow: 0 0 12px var(--cyan);
   vertical-align: 0.08em;
+  animation: pulse 2.4s ease-in-out infinite;
 }
 
 h2 {
@@ -274,6 +330,19 @@ ul[aria-label] > li + li {
   border-top: 1px solid var(--border);
 }
 
+ul[aria-label] > li {
+  transition: background 0.12s ease;
+}
+
+ul[aria-label] > li:hover {
+  background: rgba(226, 236, 250, 0.03);
+}
+
+/* an empty balances/transfers box shouldn't render as a hollow rectangle */
+ul[aria-label]:empty {
+  display: none;
+}
+
 /* amounts and codes render in the mono board face */
 ul[aria-label] > li span:last-child,
 ul[aria-label="Transfers"] > li {
@@ -361,4 +430,47 @@ p[role="alert"] {
   background: rgba(251, 113, 133, 0.12);
   border: 1px solid rgba(251, 113, 133, 0.4);
   border-radius: var(--radius-sm);
+}
+
+/* empty ledger: an invitation, not a blank line */
+.empty {
+  padding: 1.25rem 1rem;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Motion ---------------------------------------------------------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
