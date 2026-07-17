@@ -67,21 +67,40 @@ test("settlement nets to zero, returns minimal transfers, uses frozen rate", asy
 })
 
 test("rounding query param overrides the group default", async () => {
-  const g = await makeGroup(["Alice", "Bob"], 1)
-  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const g = await makeGroup(["Alice", "Bob"], 10) // group default: round to nearest $10
+  // biome-ignore lint/suspicious/noExplicitAny: test payload shape
   const [alice, bob] = g.members.map((m: any) => m.id)
+  // Alice pays 51.00 USD split 2 ways => Bob owes 2550 cents.
   await postExpense(g.group.slug, {
     payerId: alice,
-    amountMinor: 1050,
+    amountMinor: 5100,
     currency: "USD",
     description: "x",
     split: { kind: "equal", participantIds: [alice, bob] },
   })
-  // Bob owes 525 cents. rounding=1 (whole dollar) => round to nearest 100 => 500.
-  const res = await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement?rounding=1`)
-  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
-  const s = (await res.json()) as any
-  expect(s.transfers[0].amountMinor).toBe(500)
+
+  // No query param => group default rounding=10 => nearest $10 => 2550 -> 3000.
+  const def = (await (
+    await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement`)
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: test response shape
+    .json()) as any
+  expect(def.transfers[0].amountMinor).toBe(3000)
+
+  // ?rounding=1 overrides => nearest $1 => 2550 -> 2600. Differs from the default,
+  // so this assertion only passes if the query param is actually honored.
+  const override = (await (
+    await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement?rounding=1`)
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: test response shape
+    .json()) as any
+  expect(override.transfers[0].amountMinor).toBe(2600)
+
+  // An invalid rounding value falls back to the group default (200, not 400).
+  const garbage = await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement?rounding=7`)
+  expect(garbage.status).toBe(200)
+  // biome-ignore lint/suspicious/noExplicitAny: test response shape
+  expect(((await garbage.json()) as any).transfers[0].amountMinor).toBe(3000)
 })
 
 test("404 for unknown group settlement", async () => {
