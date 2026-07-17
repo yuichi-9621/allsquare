@@ -56,6 +56,15 @@ test("submitting a valid form creates a group and navigates to /g/:slug", async 
   expect(body.memberNames).toEqual(["Alice", "Bob"])
 })
 
+test("an added member row can be removed again", async () => {
+  const user = userEvent.setup()
+  renderApp()
+  await user.click(screen.getByRole("button", { name: "Add member" }))
+  expect(screen.getByRole("textbox", { name: "Member 3" })).toBeTruthy()
+  await user.click(screen.getByRole("button", { name: "Remove member 3" }))
+  expect(screen.queryByRole("textbox", { name: "Member 3" })).toBeNull()
+})
+
 test("rejects a form with fewer than two members", async () => {
   const user = userEvent.setup()
   renderApp()
