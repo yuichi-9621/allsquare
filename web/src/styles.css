@@ -1,0 +1,364 @@
+/* Allsquare — "Terminal" visual identity.
+   Dark ink-navy departures board: electric cyan for actions, lime/rose for
+   money signals. Mobile-first. Styles the app's semantic HTML directly, so
+   components stay markup-only and the test queries (role/label/text) are
+   untouched. System font stacks only — no network fonts (offline PWA / CSP). */
+
+:root {
+  --bg: #081627;
+  --card: #0f2542;
+  --panel: #16325a;
+  --field: #0b1e38;
+  --border: rgba(226, 236, 250, 0.1);
+  --border-strong: rgba(226, 236, 250, 0.2);
+
+  --text: #e8eef7;
+  --text-dim: #8fa6c6;
+
+  --cyan: #22d3ee;
+  --cyan-bright: #67e8f9;
+  --cyan-ink: #04222f;
+  --lime: #a3e635;
+  --rose: #fb7185;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.7);
+  --ring: 0 0 0 3px rgba(34, 211, 238, 0.35);
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  /* faint control-tower glow at the top edge */
+  background-image: radial-gradient(120% 60% at 50% -10%, rgba(34, 211, 238, 0.12), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(1rem, 4vw, 2.75rem) 1rem;
+}
+
+/* ---- Top-level card (both routes) ------------------------------------ */
+#root > main,
+#root > form {
+  width: 100%;
+  max-width: 30rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 5vw, 2rem);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ---- Nested panels --------------------------------------------------- */
+main > section,
+main > form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Headings: departures-board wordmark ----------------------------- */
+h1,
+h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+  color: var(--text);
+}
+
+/* small cyan tick before the trip/app title */
+#root > main > h1::before,
+#root > form > h1::before {
+  content: "";
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.55rem;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+  vertical-align: 0.08em;
+}
+
+h2 {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+/* ---- Forms & fields -------------------------------------------------- */
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* radio / checkbox rows read as a single inline control */
+label:has(input[type="radio"]),
+label:has(input[type="checkbox"]) {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+input,
+select {
+  width: 100%;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.7rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--cyan);
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: var(--ring);
+}
+
+::placeholder {
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0.85rem 1rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+legend {
+  padding: 0 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ---- Buttons --------------------------------------------------------- */
+button {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.05s ease;
+}
+
+button:hover {
+  border-color: var(--cyan);
+  color: var(--cyan-bright);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* primary calls to action: filled cyan, board-label type */
+button[type="submit"] {
+  align-self: stretch;
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--cyan-ink);
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.75rem 1rem;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--cyan-bright);
+  border-color: var(--cyan-bright);
+  color: var(--cyan-ink);
+  box-shadow: 0 0 22px -4px var(--cyan);
+}
+
+/* ---- Lists: money rows ---------------------------------------------- */
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul[aria-label] {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+ul[aria-label] > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.95rem;
+}
+
+ul[aria-label] > li + li {
+  border-top: 1px solid var(--border);
+}
+
+/* amounts and codes render in the mono board face */
+ul[aria-label] > li span:last-child,
+ul[aria-label="Transfers"] > li {
+  font-variant-numeric: tabular-nums;
+}
+
+/* delete button sits at the row's end, quiet until hovered */
+ul[aria-label="Expenses"] > li {
+  justify-content: space-between;
+}
+
+ul[aria-label="Expenses"] button[aria-label^="Delete"] {
+  margin-left: auto;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+ul[aria-label="Expenses"] button[aria-label^="Delete"]:hover {
+  border-color: var(--rose);
+  color: var(--rose);
+}
+
+/* ---- Balance signal colouring (set in BalanceList) ------------------ */
+.balance {
+  border-left: 3px solid transparent;
+}
+
+.balance--owed {
+  border-left-color: var(--lime);
+}
+
+.balance--owes {
+  border-left-color: var(--rose);
+}
+
+.balance--settled {
+  border-left-color: var(--border-strong);
+  color: var(--text-dim);
+}
+
+/* ---- Member picker: identity chips ---------------------------------- */
+section[aria-label="Who are you?"] ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+section[aria-label="Who are you?"] button {
+  border-color: var(--cyan);
+  color: var(--cyan-bright);
+}
+
+section[aria-label="Who are you?"] button:hover {
+  background: rgba(34, 211, 238, 0.12);
+}
+
+/* ---- Share bar & QR -------------------------------------------------- */
+section[aria-label="Share"] {
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+section[aria-label="Share"] svg {
+  padding: 0.5rem;
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Hints, totals, previews, errors -------------------------------- */
+p {
+  margin: 0;
+}
+
+p[data-testid] {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+p[role="alert"] {
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  color: #fecdd3;
+  background: rgba(251, 113, 133, 0.12);
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  border-radius: var(--radius-sm);
+}

@@ -15,6 +15,7 @@ export function BalanceList({
     <ul aria-label="Balances">
       {balances.map((b) => {
         const name = nameOf.get(b.memberId) ?? "?"
+        const tone = b.netMinor === 0 ? "settled" : b.netMinor > 0 ? "owed" : "owes"
         const label =
           b.netMinor === 0
             ? "is settled"
@@ -22,7 +23,7 @@ export function BalanceList({
               ? `is owed ${formatMoney(b.netMinor, baseCurrency)}`
               : `owes ${formatMoney(-b.netMinor, baseCurrency)}`
         return (
-          <li key={b.memberId}>
+          <li key={b.memberId} className={`balance balance--${tone}`}>
             {name} {label}
           </li>
         )

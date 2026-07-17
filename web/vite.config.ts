@@ -12,8 +12,8 @@ export default defineConfig({
         name: "Allsquare",
         short_name: "Allsquare",
         description: "Split anything on a trip. End up all square.",
-        theme_color: "#0f766e",
-        background_color: "#ffffff",
+        theme_color: "#081627",
+        background_color: "#081627",
         display: "standalone",
         start_url: "/",
         icons: [
