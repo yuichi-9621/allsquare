@@ -1,5 +1,6 @@
 import { Link, Route, Routes } from "react-router-dom"
 import { CreateGroup } from "./routes/CreateGroup"
+import { Dashboard } from "./routes/Dashboard"
 import { GroupPage } from "./routes/GroupPage"
 
 export function App() {
@@ -12,7 +13,8 @@ export function App() {
         <span className="brand-tag">split · settle · square up</span>
       </header>
       <Routes>
-        <Route path="/" element={<CreateGroup />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/new" element={<CreateGroup />} />
         <Route path="/g/:slug" element={<GroupPage />} />
       </Routes>
     </div>

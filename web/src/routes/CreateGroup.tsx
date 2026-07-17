@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createGroup } from "../lib/api"
+import { recordTrip } from "../lib/recentTrips"
 import type { Rounding } from "../lib/types"
 
 const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "THB", "SGD"]
@@ -41,6 +42,12 @@ export function CreateGroup() {
         rounding,
         memberNames: names,
       })
+      recordTrip({
+        slug: state.group.slug,
+        title: state.group.title,
+        baseCurrency: state.group.baseCurrency,
+        rounding: state.group.rounding,
+      })
       navigate(`/g/${state.group.slug}`)
     } catch {
       setError("Could not create the group. Try again.")
@@ -51,9 +58,14 @@ export function CreateGroup() {
   return (
     <form onSubmit={onSubmit} aria-label="Create group">
       <h1>Start a group</h1>
+      <p className="lede">No account needed. Share the link and everyone can add expenses.</p>
       <label>
         Trip title
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Kyoto trip, Tahoe weekend…"
+        />
       </label>
       <label>
         Base currency
@@ -87,6 +99,7 @@ export function CreateGroup() {
               aria-label={`Member ${i + 1}`}
               value={name}
               onChange={(e) => setName(i, e.target.value)}
+              placeholder="Name"
             />
             {memberNames.length > 2 ? (
               <button

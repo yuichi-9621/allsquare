@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { AddExpenseForm } from "../components/AddExpenseForm"
 import { BalanceList } from "../components/BalanceList"
@@ -11,6 +11,7 @@ import { useGroup } from "../hooks/useGroup"
 import { useSettlement } from "../hooks/useSettlement"
 import { getActiveMemberId, setActiveMemberId } from "../lib/activeMember"
 import { deleteExpense } from "../lib/api"
+import { recordTrip } from "../lib/recentTrips"
 
 export function GroupPage() {
   const { slug = "" } = useParams()
@@ -20,6 +21,19 @@ export function GroupPage() {
   // count; when inline-edit ships, switch to a content key so same-count edits also refresh.
   const revision = state?.expenses.length ?? 0
   const settlement = useSettlement(slug, state?.group.rounding ?? 1, revision)
+
+  // Remember every group opened on this device so it shows on the dashboard.
+  useEffect(() => {
+    const g = state?.group
+    if (g) {
+      recordTrip({
+        slug: g.slug,
+        title: g.title,
+        baseCurrency: g.baseCurrency,
+        rounding: g.rounding,
+      })
+    }
+  }, [state?.group])
 
   const pick = useCallback(
     (memberId: string) => {
