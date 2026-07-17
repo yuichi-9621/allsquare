@@ -46,6 +46,36 @@ test("loads the group and prompts the member picker", async () => {
   screen.getByRole("heading", { name: "Settle up" })
 })
 
+test("adding your name from the picker adds you and identifies you", async () => {
+  let added = false
+  const withCarol: GroupState = {
+    ...state,
+    members: [...state.members, { id: "m3", name: "Carol", sortOrder: 2 }],
+  }
+  server.use(
+    http.get("http://localhost/api/groups/abc123", () =>
+      HttpResponse.json(added ? withCarol : state),
+    ),
+    http.get("http://localhost/api/groups/abc123/settlement", () => HttpResponse.json(settlement)),
+    http.post("http://localhost/api/groups/abc123/members", () => {
+      added = true
+      return HttpResponse.json({ id: "m3", name: "Carol", sortOrder: 2 }, { status: 201 })
+    }),
+  )
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter initialEntries={["/g/abc123"]}>
+      <Routes>
+        <Route path="/g/:slug" element={<GroupPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+  await waitFor(() => screen.getByRole("heading", { name: "Kyoto Trip" }))
+  await user.type(screen.getByRole("textbox", { name: "Not listed? Add your name" }), "Carol")
+  await user.click(screen.getByRole("button", { name: "Add & continue" }))
+  await screen.findByText("You are Carol.")
+})
+
 test("deleting an expense calls DELETE and refreshes the group", async () => {
   const withExpense: GroupState = {
     ...state,

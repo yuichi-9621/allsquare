@@ -423,6 +423,19 @@ ul[aria-label="Expenses"] .row-edit ~ .row-delete {
   align-self: stretch;
 }
 
+/* Add-member is a secondary action; outline it so one solid primary (Add
+   expense / pick-your-name) leads each screen. */
+.add-member button[type="submit"] {
+  background: transparent;
+  color: var(--accent);
+}
+
+.add-member button[type="submit"]:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: none;
+}
+
 /* ---- Dashboard: trips ------------------------------------------------ */
 .lede {
   margin-top: -0.4rem;
