@@ -126,6 +126,10 @@ test("PATCH keeps original frozen rate when currency unchanged; DELETE soft-dele
     // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
     .json()) as any
 
+  // Mutate the cached rate after create. A correct PATCH with unchanged currency
+  // reuses the FROZEN 0.0066; a buggy re-resolve would pick up this 0.0099 sentinel.
+  await seedRate("JPY", "USD", 0.0099)
+
   // No cache reseed: PATCH must reuse the stored 0.0066 because currency is unchanged.
   const patched = (await (
     await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses/${created.id}`, {
@@ -179,6 +183,44 @@ test("rejects an amountMinor beyond the safe-integer range with 400", async () =
     currency: "JPY",
     description: "overflow",
     split: { kind: "equal", participantIds: [alice] },
+  })
+  expect(res.status).toBe(400)
+})
+
+test("duplicate participant in an equal split is rejected 400", async () => {
+  const g = await makeGroup()
+  await seedRate("JPY", "USD", 0.0066)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const [alice, bob] = g.members.map((m: any) => m.id)
+  const res = await postExpense(g.group.slug, {
+    payerId: alice,
+    amountMinor: 5000,
+    currency: "JPY",
+    description: "x",
+    split: { kind: "equal", participantIds: [alice, alice, bob] },
+  })
+  expect(res.status).toBe(400)
+})
+
+test("duplicate member in an exact split is rejected 400 even when the sum matches", async () => {
+  const g = await makeGroup()
+  await seedRate("JPY", "USD", 0.0066)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const [alice] = g.members.map((m: any) => m.id)
+  // 5000 JPY * 0.0066 = 3300; 1650 + 1650 = 3300 so the SUM check would pass —
+  // this proves the dedup check fires independently of the sum check.
+  const res = await postExpense(g.group.slug, {
+    payerId: alice,
+    amountMinor: 5000,
+    currency: "JPY",
+    description: "x",
+    split: {
+      kind: "exact",
+      shares: [
+        { memberId: alice, amountMinor: 1650 },
+        { memberId: alice, amountMinor: 1650 },
+      ],
+    },
   })
   expect(res.status).toBe(400)
 })

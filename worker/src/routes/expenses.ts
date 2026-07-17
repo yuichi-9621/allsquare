@@ -45,6 +45,9 @@ async function prepareShares(
     for (const id of body.split.participantIds) {
       if (!ids.has(id)) return { ok: false, message: `participant ${id} is not a member` }
     }
+    if (new Set(body.split.participantIds).size !== body.split.participantIds.length) {
+      return { ok: false, message: "duplicate participant id in split" }
+    }
     return {
       ok: true,
       splitType: "equal",
@@ -58,6 +61,9 @@ async function prepareShares(
     if (!ids.has(s.memberId))
       return { ok: false, message: `share member ${s.memberId} is not a member` }
     sum += s.amountMinor
+  }
+  if (new Set(body.split.shares.map((s) => s.memberId)).size !== body.split.shares.length) {
+    return { ok: false, message: "duplicate member id in exact split" }
   }
   if (sum !== baseTotal) {
     return {
