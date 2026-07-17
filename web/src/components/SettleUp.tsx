@@ -5,9 +5,17 @@ import type { Group, Member, Rounding } from "../lib/types"
 
 const ROUNDINGS: Rounding[] = [1, 10, 100, 1000]
 
-export function SettleUp({ group, members }: { group: Group; members: Member[] }) {
+export function SettleUp({
+  group,
+  members,
+  revision,
+}: {
+  group: Group
+  members: Member[]
+  revision?: number
+}) {
   const [rounding, setRounding] = useState<Rounding>(group.rounding)
-  const settlement = useSettlement(group.slug, rounding)
+  const settlement = useSettlement(group.slug, rounding, revision)
   const nameOf = new Map(members.map((m) => [m.id, m.name]))
 
   return (

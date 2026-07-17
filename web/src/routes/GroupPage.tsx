@@ -16,7 +16,10 @@ export function GroupPage() {
   const { slug = "" } = useParams()
   const { state, error, refresh } = useGroup(slug)
   const [activeId, setActiveId] = useState<string | null>(() => getActiveMemberId(slug))
-  const settlement = useSettlement(slug, state?.group.rounding ?? 1)
+  // bump settlement refetch when the ledger changes (add/delete/poll). NOTE: uses expense
+  // count; when inline-edit ships, switch to a content key so same-count edits also refresh.
+  const revision = state?.expenses.length ?? 0
+  const settlement = useSettlement(slug, state?.group.rounding ?? 1, revision)
 
   const pick = useCallback(
     (memberId: string) => {
@@ -62,7 +65,7 @@ export function GroupPage() {
         onDelete={onDeleteExpense}
       />
       <AddExpenseForm group={group} members={members} defaultPayerId={activeId} onAdded={refresh} />
-      <SettleUp group={group} members={members} />
+      <SettleUp group={group} members={members} revision={revision} />
     </main>
   )
 }
