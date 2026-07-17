@@ -1,5 +1,12 @@
 import { expect, test } from "vitest"
-import { convertMinor, decimalsFor, formatMoney, formatWithBase, parseMajorToMinor } from "./money"
+import {
+  convertMinor,
+  decimalsFor,
+  formatMoney,
+  formatWithBase,
+  minorToInput,
+  parseMajorToMinor,
+} from "./money"
 
 test.each([
   ["JPY", 0],
@@ -60,4 +67,21 @@ test.each([
 
 test.each(["", "  ", "abc", "-1", "1e999"])("parseMajorToMinor rejects %s", (bad) => {
   expect(parseMajorToMinor(bad, "USD")).toBeNull()
+})
+
+test.each([
+  [2000, "USD", "20.00"],
+  [5000, "JPY", "5000"],
+  [199, "USD", "1.99"],
+  [0, "EUR", "0.00"],
+])("minorToInput(%i, %s) === %s", (minor, currency, expected) => {
+  expect(minorToInput(minor, currency)).toBe(expected)
+})
+
+test.each([
+  [2000, "USD"],
+  [5000, "JPY"],
+  [199, "USD"],
+])("minorToInput round-trips through parseMajorToMinor (%i, %s)", (minor, currency) => {
+  expect(parseMajorToMinor(minorToInput(minor, currency), currency)).toBe(minor)
 })

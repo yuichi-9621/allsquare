@@ -69,6 +69,14 @@ export function formatWithBase(
   return `${shown} · ≈ ${formatMoney(baseMinor, baseCurrency)}`
 }
 
+// Minor units -> a plain, editable major string (no symbol, no grouping) for
+// pre-filling amount inputs when editing. Inverse of parseMajorToMinor:
+// parseMajorToMinor(minorToInput(m, c), c) === m for safe integers.
+export function minorToInput(amountMinor: number, currency: string): string {
+  const decimals = decimalsFor(currency)
+  return (amountMinor / minorPerUnit(currency)).toFixed(decimals)
+}
+
 export function parseMajorToMinor(input: string, currency: string): number | null {
   const trimmed = input.trim()
   if (trimmed === "") return null

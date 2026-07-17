@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { AddExpenseForm } from "../components/AddExpenseForm"
 import { BalanceList } from "../components/BalanceList"
+import { ExpenseForm } from "../components/ExpenseForm"
 import { ExpenseList } from "../components/ExpenseList"
 import { InstallHint } from "../components/InstallHint"
 import { MemberPicker } from "../components/MemberPicker"
@@ -17,9 +17,11 @@ export function GroupPage() {
   const { slug = "" } = useParams()
   const { state, error, refresh } = useGroup(slug)
   const [activeId, setActiveId] = useState<string | null>(() => getActiveMemberId(slug))
-  // bump settlement refetch when the ledger changes (add/delete/poll). NOTE: uses expense
-  // count; when inline-edit ships, switch to a content key so same-count edits also refresh.
-  const revision = state?.expenses.length ?? 0
+  const [editingId, setEditingId] = useState<string | null>(null)
+  // Refetch settlement whenever the ledger's CONTENT changes (add / delete /
+  // edit / poll). A content key — not the expense count — so an edit that keeps
+  // the same number of expenses still refreshes balances.
+  const revision = JSON.stringify(state?.expenses ?? [])
   const settlement = useSettlement(slug, state?.group.rounding ?? 1, revision)
 
   // Remember every group opened on this device so it shows on the dashboard.
@@ -56,6 +58,7 @@ export function GroupPage() {
 
   const { group, members, expenses } = state
   const shareUrl = `${window.location.origin}/g/${group.slug}`
+  const editingExpense = editingId ? expenses.find((e) => e.id === editingId) : undefined
 
   return (
     <main>
@@ -77,8 +80,19 @@ export function GroupPage() {
         members={members}
         baseCurrency={group.baseCurrency}
         onDelete={onDeleteExpense}
+        onEdit={setEditingId}
       />
-      <AddExpenseForm group={group} members={members} defaultPayerId={activeId} onAdded={refresh} />
+      {/* One form area, two modes. A fresh key per target re-initialises the
+          form state from the expense being edited (or resets to "add"). */}
+      <ExpenseForm
+        key={editingId ?? "new"}
+        group={group}
+        members={members}
+        defaultPayerId={activeId}
+        onAdded={refresh}
+        expense={editingExpense}
+        onCancel={editingExpense ? () => setEditingId(null) : undefined}
+      />
       <SettleUp group={group} members={members} revision={revision} />
     </main>
   )

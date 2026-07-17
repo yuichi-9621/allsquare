@@ -50,3 +50,16 @@ test("omits delete buttons when onDelete is not provided", () => {
   render(<ExpenseList expenses={expenses} members={members} baseCurrency="USD" />)
   expect(screen.queryByRole("button", { name: /Delete/ })).toBeNull()
 })
+
+test("renders an edit button that calls onEdit with the expense id", async () => {
+  const onEdit = vi.fn()
+  const user = userEvent.setup()
+  render(<ExpenseList expenses={expenses} members={members} baseCurrency="USD" onEdit={onEdit} />)
+  await user.click(screen.getByRole("button", { name: "Edit Ramen" }))
+  expect(onEdit).toHaveBeenCalledWith("e1")
+})
+
+test("omits edit buttons when onEdit is not provided", () => {
+  render(<ExpenseList expenses={expenses} members={members} baseCurrency="USD" />)
+  expect(screen.queryByRole("button", { name: /Edit/ })).toBeNull()
+})

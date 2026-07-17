@@ -12,7 +12,7 @@ export function SettleUp({
 }: {
   group: Group
   members: Member[]
-  revision?: number
+  revision?: number | string
 }) {
   const [rounding, setRounding] = useState<Rounding>(group.rounding)
   const settlement = useSettlement(group.slug, rounding, revision)
