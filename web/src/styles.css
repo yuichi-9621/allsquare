@@ -372,21 +372,55 @@ ul[aria-label="Transfers"] > li {
   font-variant-numeric: tabular-nums;
 }
 
-/* delete button sits at the row's end, quiet until hovered */
+/* edit + delete are quiet twin row actions, grouped at the row's end */
 ul[aria-label="Expenses"] > li {
   justify-content: space-between;
 }
 
-ul[aria-label="Expenses"] button[aria-label^="Delete"] {
-  margin-left: auto;
+.row-edit,
+.row-delete {
   padding: 0.3rem 0.6rem;
   font-size: 0.8rem;
   color: var(--text-dim);
 }
 
-ul[aria-label="Expenses"] button[aria-label^="Delete"]:hover {
+/* the first of the pair pushes both to the trailing edge */
+.row-edit {
+  margin-left: auto;
+}
+
+ul[aria-label="Expenses"] .row-delete {
+  margin-left: auto;
+}
+
+ul[aria-label="Expenses"] .row-edit ~ .row-delete {
+  margin-left: 0;
+}
+
+.row-edit:hover {
+  border-color: var(--accent);
+  color: var(--accent-bright);
+}
+
+.row-delete:hover {
   border-color: var(--rose);
   color: var(--rose);
+}
+
+/* form footer: primary Save/Add plus an optional quiet Cancel */
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+
+.form-actions button[type="submit"] {
+  flex: 1;
+}
+
+.form-actions .ghost {
+  flex: none;
+  align-self: stretch;
 }
 
 /* ---- Dashboard: trips ------------------------------------------------ */

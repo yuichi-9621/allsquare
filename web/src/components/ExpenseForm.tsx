@@ -1,32 +1,52 @@
 import { type FormEvent, useEffect, useState } from "react"
-import { addExpense, getFx } from "../lib/api"
+import { addExpense, editExpense, getFx } from "../lib/api"
 import { todayISODate } from "../lib/date"
-import { convertMinor, formatMoney, parseMajorToMinor } from "../lib/money"
-import type { ExpenseBody, Group, Member } from "../lib/types"
+import { convertMinor, formatMoney, minorToInput, parseMajorToMinor } from "../lib/money"
+import type { Expense, ExpenseBody, Group, Member } from "../lib/types"
 
 const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "THB", "SGD"]
 
-export function AddExpenseForm({
+// Dual-mode expense form. With no `expense` it adds; with one it edits that
+// expense in place (prefilled, "Save changes", plus Cancel). The parent gives
+// each edit a fresh `key` so state re-initialises from the expense.
+export function ExpenseForm({
   group,
   members,
   defaultPayerId,
   onAdded,
+  expense,
+  onCancel,
 }: {
   group: Group
   members: Member[]
   defaultPayerId: string | null
   onAdded: () => void
+  expense?: Expense | undefined
+  onCancel?: (() => void) | undefined
 }) {
   const base = group.baseCurrency
-  const [payerId, setPayerId] = useState(defaultPayerId ?? members[0]?.id ?? "")
-  const [description, setDescription] = useState("")
-  const [splitKind, setSplitKind] = useState<"equal" | "exact">("equal")
-  const [currency, setCurrency] = useState(base)
-  const [amount, setAmount] = useState("")
-  const [participants, setParticipants] = useState<Set<string>>(
-    () => new Set(members.map((m) => m.id)),
+  const editing = expense !== undefined
+  const [payerId, setPayerId] = useState(expense?.payerId ?? defaultPayerId ?? members[0]?.id ?? "")
+  const [description, setDescription] = useState(expense?.description ?? "")
+  const [splitKind, setSplitKind] = useState<"equal" | "exact">(expense?.split.kind ?? "equal")
+  const [currency, setCurrency] = useState(expense?.currency ?? base)
+  const [amount, setAmount] = useState(
+    expense && expense.split.kind === "equal"
+      ? minorToInput(expense.amountMinor, expense.currency)
+      : "",
   )
-  const [exact, setExact] = useState<Record<string, string>>({})
+  const [participants, setParticipants] = useState<Set<string>>(() =>
+    expense?.split.kind === "equal"
+      ? new Set(expense.split.participantIds)
+      : new Set(members.map((m) => m.id)),
+  )
+  const [exact, setExact] = useState<Record<string, string>>(() =>
+    expense?.split.kind === "exact"
+      ? Object.fromEntries(
+          expense.split.shares.map((s) => [s.memberId, minorToInput(s.amountMinor, base)]),
+        )
+      : {},
+  )
   const [preview, setPreview] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -36,10 +56,20 @@ export function AddExpenseForm({
   const effectiveCurrency = splitKind === "exact" ? base : currency
   const equalAmountMinor = parseMajorToMinor(amount, effectiveCurrency)
 
-  // Live "≈ base" preview via GET /api/fx (equal splits, non-base currency only).
+  // Editing without changing the currency keeps the ORIGINAL frozen rate
+  // (the app's core promise), so preview against it — never a live rate.
+  const frozenRate = expense && currency === expense.currency ? expense.fxRateToBase : null
+
+  // "≈ base" preview for equal splits in a non-base currency. Uses the frozen
+  // rate when it applies; otherwise a live GET /api/fx (matching the server,
+  // which re-freezes only when the currency changes).
   useEffect(() => {
     if (splitKind === "exact" || effectiveCurrency === base || equalAmountMinor === null) {
       setPreview(null)
+      return
+    }
+    if (frozenRate !== null) {
+      setPreview(convertMinor(equalAmountMinor, effectiveCurrency, base, frozenRate))
       return
     }
     let alive = true
@@ -53,7 +83,7 @@ export function AddExpenseForm({
     return () => {
       alive = false
     }
-  }, [splitKind, effectiveCurrency, base, equalAmountMinor])
+  }, [splitKind, effectiveCurrency, base, equalAmountMinor, frozenRate])
 
   const toggleParticipant = (id: string) =>
     setParticipants((prev) => {
@@ -116,21 +146,27 @@ export function AddExpenseForm({
 
     setSubmitting(true)
     try {
-      await addExpense(group.slug, body)
-      setDescription("")
-      setAmount("")
-      setExact({})
-      onAdded()
+      if (editing) {
+        await editExpense(group.slug, expense.id, body)
+        onAdded()
+        onCancel?.()
+      } else {
+        await addExpense(group.slug, body)
+        setDescription("")
+        setAmount("")
+        setExact({})
+        onAdded()
+      }
     } catch {
-      setError("Could not add the expense.")
+      setError(editing ? "Could not save the expense." : "Could not add the expense.")
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={onSubmit} aria-label="Add expense">
-      <h2>Add an expense</h2>
+    <form onSubmit={onSubmit} aria-label={editing ? "Edit expense" : "Add expense"}>
+      <h2>{editing ? "Edit expense" : "Add an expense"}</h2>
       <label>
         Payer
         <select value={payerId} onChange={(e) => setPayerId(e.target.value)}>
@@ -217,9 +253,16 @@ export function AddExpenseForm({
       )}
 
       {error ? <p role="alert">{error}</p> : null}
-      <button type="submit" disabled={submitting}>
-        Add expense
-      </button>
+      <div className="form-actions">
+        {editing && onCancel ? (
+          <button type="button" className="ghost" onClick={onCancel}>
+            Cancel
+          </button>
+        ) : null}
+        <button type="submit" disabled={submitting}>
+          {editing ? "Save changes" : "Add expense"}
+        </button>
+      </div>
     </form>
   )
 }

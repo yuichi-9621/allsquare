@@ -6,11 +6,13 @@ export function ExpenseList({
   members,
   baseCurrency,
   onDelete,
+  onEdit,
 }: {
   expenses: Expense[]
   members: Member[]
   baseCurrency: string
   onDelete?: (expenseId: string) => void
+  onEdit?: (expenseId: string) => void
 }) {
   const nameOf = new Map(members.map((m) => [m.id, m.name]))
   if (expenses.length === 0) return <p className="empty">No expenses yet.</p>
@@ -29,9 +31,20 @@ export function ExpenseList({
                 baseCurrency,
               )}
             </span>{" "}
+            {onEdit ? (
+              <button
+                type="button"
+                className="row-edit"
+                aria-label={`Edit ${e.description}`}
+                onClick={() => onEdit(e.id)}
+              >
+                Edit
+              </button>
+            ) : null}
             {onDelete ? (
               <button
                 type="button"
+                className="row-delete"
                 aria-label={`Delete ${e.description}`}
                 onClick={() => onDelete(e.id)}
               >
