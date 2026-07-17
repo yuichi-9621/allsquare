@@ -173,6 +173,46 @@ test("PATCH keeps original frozen rate when currency unchanged; DELETE soft-dele
   expect(missing.status).toBe(404)
 })
 
+test("PATCH re-freezes the FX rate when the currency changes", async () => {
+  const g = await makeGroup()
+  await seedRate("JPY", "USD", 0.0066)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const [alice, bob, carol] = g.members.map((m: any) => m.id)
+  const created = (await (
+    await postExpense(g.group.slug, {
+      payerId: alice,
+      amountMinor: 5000,
+      currency: "JPY",
+      description: "Dinner",
+      split: { kind: "equal", participantIds: [alice, bob, carol] },
+    })
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+    .json()) as any
+  expect(created.fxRateToBase).toBe(0.0066)
+
+  // Change the currency to EUR (distinct seeded rate). The route MUST re-resolve,
+  // not keep the old 0.0066.
+  await seedRate("EUR", "USD", 1.1)
+  const patched = (await (
+    await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses/${created.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        payerId: alice,
+        amountMinor: 1000,
+        currency: "EUR",
+        description: "Dinner in EUR",
+        split: { kind: "equal", participantIds: [alice, bob, carol] },
+      }),
+    })
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+    .json()) as any
+  expect(patched.currency).toBe("EUR")
+  expect(patched.fxRateToBase).toBe(1.1)
+})
+
 test("rejects an amountMinor beyond the safe-integer range with 400", async () => {
   const g = await makeGroup()
   await seedRate("JPY", "USD", 0.0066)

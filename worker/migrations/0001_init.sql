@@ -37,7 +37,8 @@ CREATE TABLE expenses (
 CREATE TABLE expense_shares (
   expense_id         TEXT    NOT NULL REFERENCES expenses(id),
   member_id          TEXT    NOT NULL REFERENCES members(id),
-  share_amount_minor INTEGER NOT NULL
+  share_amount_minor INTEGER NOT NULL,
+  UNIQUE (expense_id, member_id)
 );
 
 -- Frankfurter lookup cache. base = group base currency (convert TO),
