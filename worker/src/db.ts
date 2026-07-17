@@ -171,3 +171,123 @@ export async function memberIds(db: D1Database, groupId: string): Promise<Set<st
     .all<{ id: string }>()
   return new Set(results.map((r) => r.id))
 }
+
+export type WriteExpenseInput = {
+  groupId: string
+  payerId: string
+  amountMinor: number
+  currency: string
+  fxRateToBase: number
+  fxRateDate: string
+  description: string
+  splitType: "equal" | "exact"
+  shareRows: { memberId: string; amountMinor: number }[]
+}
+
+export async function getExpenseRow(
+  db: D1Database,
+  groupId: string,
+  id: string,
+): Promise<ExpenseRow | null> {
+  return await db
+    .prepare(
+      `SELECT ${EXPENSE_COLS} FROM expenses WHERE id = ? AND group_id = ? AND deleted_at IS NULL`,
+    )
+    .bind(id, groupId)
+    .first<ExpenseRow>()
+}
+
+export async function expenseToWire(
+  db: D1Database,
+  groupId: string,
+  id: string,
+): Promise<Expense | null> {
+  const row = await getExpenseRow(db, groupId, id)
+  return row ? await toExpense(db, row) : null
+}
+
+function shareStatements(
+  db: D1Database,
+  expenseId: string,
+  shareRows: { memberId: string; amountMinor: number }[],
+): D1PreparedStatement[] {
+  return shareRows.map((s) =>
+    db
+      .prepare(
+        "INSERT INTO expense_shares (expense_id, member_id, share_amount_minor) VALUES (?, ?, ?)",
+      )
+      .bind(expenseId, s.memberId, s.amountMinor),
+  )
+}
+
+export async function insertExpense(db: D1Database, input: WriteExpenseInput): Promise<Expense> {
+  const id = newId()
+  const createdAt = new Date().toISOString()
+  const statements: D1PreparedStatement[] = [
+    db
+      .prepare(
+        "INSERT INTO expenses (id, group_id, payer_member_id, amount_minor, currency, fx_rate_to_base, fx_rate_date, description, split_type, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+      )
+      .bind(
+        id,
+        input.groupId,
+        input.payerId,
+        input.amountMinor,
+        input.currency,
+        input.fxRateToBase,
+        input.fxRateDate,
+        input.description,
+        input.splitType,
+        createdAt,
+      ),
+    ...shareStatements(db, id, input.shareRows),
+  ]
+  await db.batch(statements)
+  const wire = await expenseToWire(db, input.groupId, id)
+  if (!wire) throw new Error("insertExpense: expense missing immediately after insert")
+  return wire
+}
+
+export async function updateExpense(
+  db: D1Database,
+  id: string,
+  input: WriteExpenseInput,
+): Promise<Expense> {
+  const statements: D1PreparedStatement[] = [
+    db
+      .prepare(
+        "UPDATE expenses SET payer_member_id = ?, amount_minor = ?, currency = ?, fx_rate_to_base = ?, fx_rate_date = ?, description = ?, split_type = ? WHERE id = ? AND group_id = ?",
+      )
+      .bind(
+        input.payerId,
+        input.amountMinor,
+        input.currency,
+        input.fxRateToBase,
+        input.fxRateDate,
+        input.description,
+        input.splitType,
+        id,
+        input.groupId,
+      ),
+    db.prepare("DELETE FROM expense_shares WHERE expense_id = ?").bind(id),
+    ...shareStatements(db, id, input.shareRows),
+  ]
+  await db.batch(statements)
+  const wire = await expenseToWire(db, input.groupId, id)
+  if (!wire) throw new Error("updateExpense: expense missing immediately after update")
+  return wire
+}
+
+export async function softDeleteExpense(
+  db: D1Database,
+  groupId: string,
+  id: string,
+): Promise<boolean> {
+  const res = await db
+    .prepare(
+      "UPDATE expenses SET deleted_at = ? WHERE id = ? AND group_id = ? AND deleted_at IS NULL",
+    )
+    .bind(new Date().toISOString(), id, groupId)
+    .run()
+  return (res.meta.changes ?? 0) > 0
+}
