@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
+import { AddMember } from "../components/AddMember"
 import { BalanceList } from "../components/BalanceList"
 import { ExpenseForm } from "../components/ExpenseForm"
 import { ExpenseList } from "../components/ExpenseList"
@@ -12,6 +13,7 @@ import { useSettlement } from "../hooks/useSettlement"
 import { getActiveMemberId, setActiveMemberId } from "../lib/activeMember"
 import { deleteExpense } from "../lib/api"
 import { recordTrip } from "../lib/recentTrips"
+import type { Member } from "../lib/types"
 
 export function GroupPage() {
   const { slug = "" } = useParams()
@@ -45,6 +47,15 @@ export function GroupPage() {
     [slug],
   )
 
+  // Adding yourself from the "who are you?" screen also identifies you.
+  const addSelf = useCallback(
+    async (member: Member) => {
+      await refresh()
+      pick(member.id)
+    },
+    [refresh, pick],
+  )
+
   const onDeleteExpense = useCallback(
     async (expenseId: string) => {
       await deleteExpense(slug, expenseId)
@@ -66,9 +77,20 @@ export function GroupPage() {
       <ShareBar url={shareUrl} />
       <InstallHint />
       {activeId === null ? (
-        <MemberPicker members={members} onPick={pick} />
+        <>
+          <MemberPicker members={members} onPick={pick} />
+          <AddMember
+            slug={slug}
+            label="Not listed? Add your name"
+            submitLabel="Add & continue"
+            onAdded={addSelf}
+          />
+        </>
       ) : (
-        <p>You are {members.find((m) => m.id === activeId)?.name ?? "a member"}.</p>
+        <>
+          <p>You are {members.find((m) => m.id === activeId)?.name ?? "a member"}.</p>
+          <AddMember slug={slug} onAdded={() => void refresh()} />
+        </>
       )}
       <BalanceList
         balances={settlement?.balances ?? []}
