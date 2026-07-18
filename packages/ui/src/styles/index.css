@@ -1,6 +1,9 @@
+/* All @import must precede other rules (CSS spec + Vite + Biome). Token/theme
+   files use @layer, so their cascade position is set by the layer name, not by
+   where the @import sits — safe to hoist above the @tailwind directives. */
 @import "./fonts.css";
-@tailwind base;
 @import "./themes/stamp.css";
 @import "./tokens.css";
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
