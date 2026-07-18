@@ -1,46 +1,31 @@
-import { useState } from "react"
-import { useSettlement } from "../hooks/useSettlement"
 import { formatMoney } from "../lib/money"
-import type { Group, Member, Rounding } from "../lib/types"
+import type { Member, Transfer } from "../lib/types"
 
-const ROUNDINGS: Rounding[] = [1, 10, 100, 1000]
-
+// Presentational: the rounding choice now lives in the trip menu, and the
+// balances/transfers are fetched once by GroupPage. `transfers === null` = loading.
 export function SettleUp({
-  group,
+  transfers,
   members,
-  revision,
+  baseCurrency,
 }: {
-  group: Group
+  transfers: Transfer[] | null
   members: Member[]
-  revision?: number | string
+  baseCurrency: string
 }) {
-  const [rounding, setRounding] = useState<Rounding>(group.rounding)
-  const settlement = useSettlement(group.slug, rounding, revision)
   const nameOf = new Map(members.map((m) => [m.id, m.name]))
-
   return (
     <section aria-label="Settle up">
       <h2>Settle up</h2>
-      <label>
-        Round to
-        <select value={rounding} onChange={(e) => setRounding(Number(e.target.value) as Rounding)}>
-          {ROUNDINGS.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-      </label>
-      {settlement === null ? (
+      {transfers === null ? (
         <p>Calculating…</p>
-      ) : settlement.transfers.length === 0 ? (
+      ) : transfers.length === 0 ? (
         <p>Everyone is all square.</p>
       ) : (
         <ul aria-label="Transfers">
-          {settlement.transfers.map((t) => (
+          {transfers.map((t) => (
             <li key={`${t.from}-${t.to}-${t.amountMinor}`}>
               {nameOf.get(t.from) ?? "?"} pays {nameOf.get(t.to) ?? "?"}{" "}
-              {formatMoney(t.amountMinor, group.baseCurrency)}
+              {formatMoney(t.amountMinor, baseCurrency)}
             </li>
           ))}
         </ul>

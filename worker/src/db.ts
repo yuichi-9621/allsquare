@@ -132,6 +132,17 @@ export async function getGroupRow(db: D1Database, slug: string): Promise<GroupRo
   return await db.prepare("SELECT * FROM groups WHERE slug = ?").bind(slug).first<GroupRow>()
 }
 
+export async function renameGroup(
+  db: D1Database,
+  slug: string,
+  title: string,
+): Promise<GroupState | null> {
+  const group = await getGroupRow(db, slug)
+  if (!group) return null
+  await db.prepare("UPDATE groups SET title = ? WHERE id = ?").bind(title, group.id).run()
+  return getGroupState(db, slug)
+}
+
 export async function getGroupState(db: D1Database, slug: string): Promise<GroupState | null> {
   const group = await getGroupRow(db, slug)
   if (!group) return null

@@ -6,6 +6,7 @@ import {
   formatWithBase,
   minorToInput,
   parseMajorToMinor,
+  splitEqualMinor,
 } from "./money"
 
 test.each([
@@ -84,4 +85,18 @@ test.each([
   [199, "USD"],
 ])("minorToInput round-trips through parseMajorToMinor (%i, %s)", (minor, currency) => {
   expect(parseMajorToMinor(minorToInput(minor, currency), currency)).toBe(minor)
+})
+
+test("splitEqualMinor conserves the total and hands leftover cents to the first members", () => {
+  expect(splitEqualMinor(1000, 2)).toEqual([500, 500])
+  expect(splitEqualMinor(1000, 3)).toEqual([334, 333, 333]) // 1 leftover -> first
+  expect(splitEqualMinor(5, 3)).toEqual([2, 2, 1])
+  expect(splitEqualMinor(100, 0)).toEqual([])
+  for (const [total, n] of [
+    [1234, 7],
+    [999, 4],
+  ] as const) {
+    const parts = splitEqualMinor(total, n)
+    expect(parts.reduce((a, b) => a + b, 0)).toBe(total)
+  }
 })

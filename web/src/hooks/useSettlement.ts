@@ -4,7 +4,7 @@ import type { Rounding, Settlement } from "../lib/types"
 
 export function useSettlement(
   slug: string,
-  rounding: Rounding,
+  rounding?: Rounding,
   revision: number | string = 0,
 ): Settlement | null {
   const [settlement, setSettlement] = useState<Settlement | null>(null)

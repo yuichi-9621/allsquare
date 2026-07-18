@@ -69,6 +69,15 @@ export function formatWithBase(
   return `${shown} · ≈ ${formatMoney(baseMinor, baseCurrency)}`
 }
 
+// Split a total into n equal minor-unit shares, giving the leftover cents to
+// the earliest members (mirrors core.splitEqual) — for per-person breakdowns.
+export function splitEqualMinor(totalMinor: number, n: number): number[] {
+  if (n <= 0) return []
+  const base = Math.floor(totalMinor / n)
+  const remainder = totalMinor - base * n
+  return Array.from({ length: n }, (_, i) => base + (i < remainder ? 1 : 0))
+}
+
 // Minor units -> a plain, editable major string (no symbol, no grouping) for
 // pre-filling amount inputs when editing. Inverse of parseMajorToMinor:
 // parseMajorToMinor(minorToInput(m, c), c) === m for safe integers.

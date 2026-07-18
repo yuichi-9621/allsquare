@@ -28,8 +28,10 @@ settlement.get("/:slug/settlement", async (c) => {
   const state = await getGroupState(c.env.DB, c.req.param("slug"))
   if (!state) return notFound(c, "group not found")
 
+  // Default to EXACT (to the cent). Cash-handover rounding is opt-in via a
+  // valid ?rounding step; anything else (absent/invalid) stays exact.
   const q = Number(c.req.query("rounding"))
-  const rounding = (VALID_ROUNDING.has(q) ? q : state.group.rounding) as RoundingStep
+  const rounding = VALID_ROUNDING.has(q) ? (q as RoundingStep) : undefined
 
   const inputs = state.expenses.map(toInput)
   const netMap = computeBalances(inputs, state.group.baseCurrency)

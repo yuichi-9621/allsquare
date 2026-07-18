@@ -155,9 +155,9 @@ h1 {
   color: var(--text);
 }
 
-/* small emerald tick before the trip/app title */
+/* small emerald tick before the trip/app title (dashboard h1 + trip header h1) */
 .app > main > h1::before,
-.app > form > h1::before {
+.trip-header > h1::before {
   content: "";
   display: inline-block;
   width: 0.6rem;
@@ -665,6 +665,167 @@ p[role="alert"] {
   color: var(--text-dim);
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius-sm);
+}
+
+/* ---- Trip header + overflow menu ------------------------------------ */
+.trip-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.trip-header > h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.trip-menu {
+  position: relative;
+  flex: none;
+}
+
+.menu-toggle {
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 0.15rem 0.6rem;
+  color: var(--text-dim);
+}
+
+.menu-toggle:hover {
+  color: var(--accent-bright);
+  border-color: var(--accent);
+}
+
+.menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 20;
+  width: min(21rem, 82vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-item + .menu-item {
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+}
+
+.menu-item h3 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.identity {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+/* the menu is a calm tools panel — its submits are outline, not solid primaries */
+.menu-panel button[type="submit"] {
+  background: transparent;
+  color: var(--accent);
+}
+
+.menu-panel button[type="submit"]:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: none;
+}
+
+/* ---- Rich expense card ---------------------------------------------- */
+ul[aria-label="Expenses"] > li.expense {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding: 0.85rem 0.95rem;
+}
+
+.expense-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.expense-desc {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.expense-total {
+  flex: none;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.expense-payer {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.expense-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0 0.4rem 0.7rem;
+  border-left: 2px solid var(--border-strong);
+}
+
+.expense-breakdown > li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.expense-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* ---- Hero (first-run landing) --------------------------------------- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.hero > h1 {
+  font-family: var(--font);
+  font-size: clamp(1.55rem, 6vw, 2.05rem);
+  font-weight: 750;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  text-transform: none;
+  color: var(--text);
+}
+
+.hero-sub {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-dim);
 }
 
 /* ---- Motion ---------------------------------------------------------- */

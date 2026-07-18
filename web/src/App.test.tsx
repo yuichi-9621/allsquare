@@ -9,5 +9,5 @@ test("root route shows the create-group screen", () => {
       <App />
     </MemoryRouter>,
   )
-  screen.getByRole("heading", { name: "Start a group" })
+  screen.getByRole("button", { name: "Create group" })
 })

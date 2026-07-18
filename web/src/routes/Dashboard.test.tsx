@@ -14,7 +14,7 @@ test("with no saved trips it falls through to the create form", () => {
       <Dashboard />
     </MemoryRouter>,
   )
-  screen.getByRole("heading", { name: "Start a group" })
+  screen.getByRole("button", { name: "Create group" })
 })
 
 test("lists saved trips with a create-group call to action", async () => {
