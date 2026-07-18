@@ -58,12 +58,12 @@ test("POST expense freezes the FX rate and stores the expense", async () => {
   expect(e.split).toEqual({ kind: "equal", participantIds: [alice, bob, carol] })
 })
 
-test("exact split must sum to the converted base total", async () => {
+test("exact shares must sum to the expense total in its own currency", async () => {
   const g = await makeGroup()
   await seedRate("JPY", "USD", 0.0066)
   // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
   const [alice, bob] = g.members.map((m: any) => m.id)
-  // 5000 JPY * 0.0066 = 33.00 USD = 3300 cents; shares must sum to 3300.
+  // A ¥5000 dinner: exact shares are entered in JPY and must sum to 5000.
   const bad = await postExpense(g.group.slug, {
     payerId: alice,
     amountMinor: 5000,
@@ -73,7 +73,7 @@ test("exact split must sum to the converted base total", async () => {
       kind: "exact",
       shares: [
         { memberId: alice, amountMinor: 1000 },
-        { memberId: bob, amountMinor: 1000 },
+        { memberId: bob, amountMinor: 1000 }, // 2000 != 5000
       ],
     },
   })
@@ -87,12 +87,43 @@ test("exact split must sum to the converted base total", async () => {
     split: {
       kind: "exact",
       shares: [
-        { memberId: alice, amountMinor: 1300 },
-        { memberId: bob, amountMinor: 2000 },
+        { memberId: alice, amountMinor: 3000 },
+        { memberId: bob, amountMinor: 2000 }, // 5000 == 5000
       ],
     },
   })
   expect(good.status).toBe(201)
+})
+
+test("foreign-currency exact split converts each share at settlement", async () => {
+  const g = await makeGroup()
+  await seedRate("EUR", "USD", 1.115)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const [alice, bob] = g.members.map((m: any) => m.id)
+  // €15.00 exact: Alice €10.00 (1000), Bob €5.00 (500). At 1.115: Alice $11.15
+  // (1115), Bob $5.575 -> reconciled $5.58 (558); base total $16.73 (1673).
+  const res = await postExpense(g.group.slug, {
+    payerId: alice,
+    amountMinor: 1500,
+    currency: "EUR",
+    description: "Tapas",
+    split: {
+      kind: "exact",
+      shares: [
+        { memberId: alice, amountMinor: 1000 },
+        { memberId: bob, amountMinor: 500 },
+      ],
+    },
+  })
+  expect(res.status).toBe(201)
+
+  const s = await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement?rounding=1`)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const body = (await s.json()) as any
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const net = new Map(body.balances.map((b: any) => [b.memberId, b.netMinor]))
+  expect(net.get(alice)).toBe(558) // paid 1673, owes her 1115
+  expect(net.get(bob)).toBe(-558)
 })
 
 test("unknown payer id is rejected 400", async () => {
@@ -247,7 +278,7 @@ test("duplicate member in an exact split is rejected 400 even when the sum match
   await seedRate("JPY", "USD", 0.0066)
   // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
   const [alice] = g.members.map((m: any) => m.id)
-  // 5000 JPY * 0.0066 = 3300; 1650 + 1650 = 3300 so the SUM check would pass —
+  // 2500 + 2500 = 5000 matches the expense total, so the SUM check would pass —
   // this proves the dedup check fires independently of the sum check.
   const res = await postExpense(g.group.slug, {
     payerId: alice,
@@ -257,8 +288,8 @@ test("duplicate member in an exact split is rejected 400 even when the sum match
     split: {
       kind: "exact",
       shares: [
-        { memberId: alice, amountMinor: 1650 },
-        { memberId: alice, amountMinor: 1650 },
+        { memberId: alice, amountMinor: 2500 },
+        { memberId: alice, amountMinor: 2500 },
       ],
     },
   })

@@ -1,4 +1,3 @@
-import { convertMinor } from "@allsquare/core"
 import { Hono } from "hono"
 import type { z } from "zod"
 import {
@@ -29,13 +28,11 @@ type Prepared =
     }
   | { ok: false; message: string }
 
-// Validate members + (for exact splits) that shares sum to the converted base total.
+// Validate members + (for exact splits) that shares sum to the expense total.
 async function prepareShares(
   db: D1Database,
   groupId: string,
-  baseCurrency: string,
   body: ExpenseBody,
-  frozen: Frozen,
 ): Promise<Prepared> {
   const ids = await memberIds(db, groupId)
   if (!ids.has(body.payerId))
@@ -55,7 +52,9 @@ async function prepareShares(
     }
   }
 
-  const baseTotal = convertMinor(body.amountMinor, body.currency, baseCurrency, frozen.fxRateToBase)
+  // Exact shares are in the expense's own currency and must sum to the expense
+  // total (amountMinor). Their base values are derived (with rounding
+  // reconciliation) by @allsquare/core at settlement — never here.
   let sum = 0
   for (const s of body.split.shares) {
     if (!ids.has(s.memberId))
@@ -65,10 +64,10 @@ async function prepareShares(
   if (new Set(body.split.shares.map((s) => s.memberId)).size !== body.split.shares.length) {
     return { ok: false, message: "duplicate member id in exact split" }
   }
-  if (sum !== baseTotal) {
+  if (sum !== body.amountMinor) {
     return {
       ok: false,
-      message: `exact shares sum to ${sum}, expected converted base total ${baseTotal}`,
+      message: `exact shares sum to ${sum}, expected the expense total ${body.amountMinor}`,
     }
   }
   return {
@@ -88,7 +87,7 @@ expenses.post("/:slug/expenses", async (c) => {
   const r = await resolveRate(c.env.DB, body.currency, group.base_currency, today())
   const frozen: Frozen = { fxRateToBase: r.rate, fxRateDate: r.rateDate }
 
-  const prepared = await prepareShares(c.env.DB, group.id, group.base_currency, body, frozen)
+  const prepared = await prepareShares(c.env.DB, group.id, body)
   if (!prepared.ok) return badRequest(c, prepared.message)
 
   const input: WriteExpenseInput = {
@@ -123,7 +122,7 @@ expenses.patch("/:slug/expenses/:id", async (c) => {
     frozen = { fxRateToBase: r.rate, fxRateDate: r.rateDate }
   }
 
-  const prepared = await prepareShares(c.env.DB, group.id, group.base_currency, body, frozen)
+  const prepared = await prepareShares(c.env.DB, group.id, body)
   if (!prepared.ok) return badRequest(c, prepared.message)
 
   const input: WriteExpenseInput = {

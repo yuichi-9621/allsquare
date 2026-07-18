@@ -64,6 +64,67 @@ test("exact split is honored", () => {
   expect(bal.get("alice")).toBe(800)
 })
 
+test("exact split in a foreign currency derives per-share base values and conserves the total", () => {
+  // USD base; a €15.00 expense at rate 1.115 (base-per-EUR).
+  // baseTotal = convert(1500, EUR, USD, 1.115) = 15 * 1.115 * 100 = 1672.5 -> 1673
+  // Alice €10 -> 1115 (exact); Bob €5 -> 557.5 -> 557 + 1 reconciled = 558. Sum 1673.
+  const bal = computeBalances(
+    [
+      {
+        payerId: "alice",
+        amountMinor: 1500,
+        currency: "EUR",
+        fxRateToBase: 1.115,
+        split: {
+          kind: "exact",
+          shares: [
+            { memberId: "alice", amountMinor: 1000 },
+            { memberId: "bob", amountMinor: 500 },
+          ],
+        },
+      },
+    ],
+    "USD",
+  )
+  // Alice paid baseTotal (1673), owes her derived share (1115) -> +558
+  expect(bal.get("alice")).toBe(558)
+  expect(bal.get("bob")).toBe(-558)
+})
+
+test("foreign exact shares always sum to the converted base total (conservation)", () => {
+  // Awkward rate + amounts that don't divide cleanly, across 3 members.
+  const cases = [
+    { shares: [333, 333, 334], rate: 1.2345 },
+    { shares: [100, 200, 700], rate: 0.8137 },
+    { shares: [1, 1, 1], rate: 3.3333 },
+  ]
+  for (const { shares, rate } of cases) {
+    const total = shares.reduce((a, b) => a + b, 0)
+    const bal = computeBalances(
+      [
+        {
+          payerId: "p",
+          amountMinor: total,
+          currency: "EUR",
+          fxRateToBase: rate,
+          split: {
+            kind: "exact",
+            shares: shares.map((amountMinor, i) => ({ memberId: `m${i}`, amountMinor })),
+          },
+        },
+      ],
+      "USD",
+    )
+    // payer 'p' is not a member here, so members' owed shares must sum to -baseTotal;
+    // the whole ledger still nets to zero (payer credited the same baseTotal).
+    let net = 0
+    for (const v of bal.values()) net += v
+    expect(net).toBe(0)
+    const owed = [...bal.entries()].filter(([k]) => k !== "p").reduce((a, [, v]) => a + v, 0)
+    expect(owed).toBe(-(bal.get("p") ?? 0)) // members owe exactly what the payer is owed
+  }
+})
+
 test("settle drops transfers that round to zero", () => {
   const jpyExpenses: ExpenseInput[] = [
     {

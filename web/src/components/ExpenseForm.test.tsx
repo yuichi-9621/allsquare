@@ -63,7 +63,7 @@ test("exact split: entered in base currency, POSTs shares that sum to the total"
   render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={onAdded} />)
 
   await user.type(screen.getByRole("textbox", { name: "Description" }), "Wagyu")
-  await user.click(screen.getByRole("radio", { name: "Exact (in USD)" }))
+  await user.click(screen.getByRole("radio", { name: "Exact" }))
   await user.type(screen.getByRole("textbox", { name: "Exact amount for Alice" }), "20")
   await user.type(screen.getByRole("textbox", { name: "Exact amount for Bob" }), "10")
   await user.click(screen.getByRole("button", { name: "Add expense" }))
@@ -76,6 +76,44 @@ test("exact split: entered in base currency, POSTs shares that sum to the total"
     shares: [
       { memberId: "m1", amountMinor: 2000 },
       { memberId: "m2", amountMinor: 1000 },
+    ],
+  })
+})
+
+test("exact split in a foreign currency posts shares in that currency", async () => {
+  let posted: Record<string, unknown> = {}
+  server.use(
+    http.get("http://localhost/api/fx", () =>
+      HttpResponse.json({ rate: 1.1, rateDate: "2026-07-16" }),
+    ),
+    http.post("http://localhost/api/groups/abc123/expenses", async ({ request }) => {
+      posted = (await request.json()) as Record<string, unknown>
+      return HttpResponse.json({}, { status: 201 })
+    }),
+  )
+  const onAdded = vi.fn()
+  const user = userEvent.setup()
+  render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={onAdded} />)
+
+  await user.type(screen.getByRole("textbox", { name: "Description" }), "Gelato")
+  await user.click(screen.getByRole("radio", { name: "Exact" }))
+  await user.selectOptions(screen.getByRole("combobox", { name: "Currency" }), "EUR")
+  await user.type(screen.getByRole("textbox", { name: "Exact amount for Alice" }), "10")
+  await user.type(screen.getByRole("textbox", { name: "Exact amount for Bob" }), "5")
+
+  // total €15.00 * 1.1 = $16.50 preview
+  await waitFor(() => expect(screen.getByTestId("fx-preview")).toHaveTextContent("≈ $16.50"))
+
+  await user.click(screen.getByRole("button", { name: "Add expense" }))
+  await waitFor(() => expect(onAdded).toHaveBeenCalled())
+
+  expect(posted.currency).toBe("EUR")
+  expect(posted.amountMinor).toBe(1500)
+  expect(posted.split).toEqual({
+    kind: "exact",
+    shares: [
+      { memberId: "m1", amountMinor: 1000 },
+      { memberId: "m2", amountMinor: 500 },
     ],
   })
 })
@@ -205,7 +243,7 @@ test("edit mode: prefills an exact split in base amounts", () => {
       onCancel={vi.fn()}
     />,
   )
-  expect(screen.getByRole("radio", { name: "Exact (in USD)" })).toBeChecked()
+  expect(screen.getByRole("radio", { name: "Exact" })).toBeChecked()
   expect(screen.getByRole("textbox", { name: "Exact amount for Alice" })).toHaveValue("20.00")
   expect(screen.getByRole("textbox", { name: "Exact amount for Bob" })).toHaveValue("10.00")
 })
