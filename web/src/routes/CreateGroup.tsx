@@ -1,3 +1,4 @@
+import { Button, Card, CardContent, Input, Label } from "@allsquare/ui"
 import { type FormEvent, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createGroup } from "../lib/api"
@@ -53,66 +54,93 @@ export function CreateGroup() {
   }
 
   return (
-    <form onSubmit={onSubmit} aria-label="Create group">
-      <div className="hero">
-        <h1>Split anything on a trip. End up all square.</h1>
-        <p className="hero-sub">
+    <form onSubmit={onSubmit} aria-label="Create group" className="flex w-full flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="font-display text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
+          Split anything on a trip. End up all square.
+        </h1>
+        <p className="text-sm text-muted-foreground">
           No sign-up. Any currency. Share one link — everyone adds what they paid, and Allsquare
           works out who owes who.
         </p>
       </div>
-      <label>
-        Trip title
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Kyoto trip, Tahoe weekend…"
-        />
-      </label>
-      <label>
-        Base currency
-        <select value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)}>
-          {CURRENCIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-      <fieldset>
-        <legend>Members</legend>
-        {memberNames.map((name, i) => (
-          <div
-            className="member-row"
-            // biome-ignore lint/suspicious/noArrayIndexKey: member rows are positional
-            key={i}
-          >
-            <input
-              aria-label={`Member ${i + 1}`}
-              value={name}
-              onChange={(e) => setName(i, e.target.value)}
-              placeholder="Name"
+
+      <Card>
+        <CardContent className="gap-4 pt-3.5">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="trip-title">Trip title</Label>
+            <Input
+              id="trip-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Kyoto trip, Tahoe weekend…"
             />
-            {memberNames.length > 2 ? (
-              <button
-                type="button"
-                className="row-remove"
-                aria-label={`Remove member ${i + 1}`}
-                onClick={() => removeRow(i)}
-              >
-                Remove
-              </button>
-            ) : null}
           </div>
-        ))}
-        <button type="button" onClick={addRow}>
-          Add member
-        </button>
-      </fieldset>
-      {error ? <p role="alert">{error}</p> : null}
-      <button type="submit" disabled={submitting}>
-        Create group
-      </button>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="base-currency">Base currency</Label>
+            <select
+              id="base-currency"
+              value={baseCurrency}
+              onChange={(e) => setBaseCurrency(e.target.value)}
+              className="flex h-11 w-full rounded-md border border-input bg-card px-3 text-base text-card-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <fieldset className="flex flex-col gap-3 rounded-md border border-border p-4">
+            <legend className="px-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              Members
+            </legend>
+            {memberNames.map((name, i) => (
+              <div
+                className="flex items-center gap-2"
+                // biome-ignore lint/suspicious/noArrayIndexKey: member rows are positional
+                key={i}
+              >
+                <Input
+                  aria-label={`Member ${i + 1}`}
+                  value={name}
+                  onChange={(e) => setName(i, e.target.value)}
+                  placeholder="Name"
+                  className="flex-1"
+                />
+                {memberNames.length > 2 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Remove member ${i + 1}`}
+                    onClick={() => removeRow(i)}
+                  >
+                    Remove
+                  </Button>
+                ) : null}
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addRow}
+              className="self-start"
+            >
+              Add member
+            </Button>
+          </fieldset>
+          {error ? (
+            <p role="alert" className="text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+          <Button type="submit" disabled={submitting} className="w-full">
+            Create group
+          </Button>
+        </CardContent>
+      </Card>
     </form>
   )
 }
