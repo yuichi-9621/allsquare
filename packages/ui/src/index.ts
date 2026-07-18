@@ -6,3 +6,10 @@ export { Label } from "./components/ui/label"
 export { Card, CardHeader, CardTitle, CardContent } from "./components/ui/card"
 export { Badge, badgeVariants } from "./components/ui/badge"
 export type { BadgeProps } from "./components/ui/badge"
+export {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./components/ui/select"
