@@ -15,3 +15,4 @@ export {
 } from "./components/ui/select"
 export { Checkbox } from "./components/ui/checkbox"
 export { RadioGroup, RadioGroupItem } from "./components/ui/radio-group"
+export { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover"
