@@ -1,3 +1,4 @@
+import { Button, Card, CardContent } from "@allsquare/ui"
 import { useState } from "react"
 import { QrCode } from "./QrCode"
 
@@ -15,10 +16,14 @@ export function ShareBar({ url }: { url: string }) {
 
   return (
     <section aria-label="Share">
-      <button type="button" onClick={copy}>
-        {copied ? "Copied!" : "Copy link"}
-      </button>
-      <QrCode value={url} />
+      <Card className="w-fit">
+        <CardContent className="items-center pt-3.5">
+          <Button type="button" variant="secondary" onClick={copy}>
+            {copied ? "Copied!" : "Copy link"}
+          </Button>
+          <QrCode value={url} />
+        </CardContent>
+      </Card>
     </section>
   )
 }
