@@ -43,7 +43,10 @@ export function ExpenseForm({
   const [exact, setExact] = useState<Record<string, string>>(() =>
     expense?.split.kind === "exact"
       ? Object.fromEntries(
-          expense.split.shares.map((s) => [s.memberId, minorToInput(s.amountMinor, base)]),
+          expense.split.shares.map((s) => [
+            s.memberId,
+            minorToInput(s.amountMinor, expense.currency),
+          ]),
         )
       : {},
   )
@@ -51,31 +54,39 @@ export function ExpenseForm({
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Exact shares are entered in the base currency (contract §Types), so pin the
-  // currency to base while "exact" is active.
-  const effectiveCurrency = splitKind === "exact" ? base : currency
-  const equalAmountMinor = parseMajorToMinor(amount, effectiveCurrency)
+  // Both split kinds work in the selected currency (exact is no longer pinned
+  // to base). The base value is derived — by the server at settlement, and here
+  // only for the "≈ base" preview.
+  const equalAmountMinor = parseMajorToMinor(amount, currency)
+  const exactTotalMinor = members.reduce(
+    (sum, m) => sum + (parseMajorToMinor(exact[m.id] ?? "", currency) ?? 0),
+    0,
+  )
 
   // Editing without changing the currency keeps the ORIGINAL frozen rate
   // (the app's core promise), so preview against it — never a live rate.
   const frozenRate = expense && currency === expense.currency ? expense.fxRateToBase : null
 
-  // "≈ base" preview for equal splits in a non-base currency. Uses the frozen
+  // The total currently entered (equal amount or exact sum), for the preview.
+  const totalForPreview =
+    splitKind === "equal" ? equalAmountMinor : exactTotalMinor > 0 ? exactTotalMinor : null
+
+  // "≈ base" preview when the expense is in a non-base currency. Uses the frozen
   // rate when it applies; otherwise a live GET /api/fx (matching the server,
   // which re-freezes only when the currency changes).
   useEffect(() => {
-    if (splitKind === "exact" || effectiveCurrency === base || equalAmountMinor === null) {
+    if (currency === base || totalForPreview === null) {
       setPreview(null)
       return
     }
     if (frozenRate !== null) {
-      setPreview(convertMinor(equalAmountMinor, effectiveCurrency, base, frozenRate))
+      setPreview(convertMinor(totalForPreview, currency, base, frozenRate))
       return
     }
     let alive = true
-    getFx(effectiveCurrency, base, todayISODate())
+    getFx(currency, base, todayISODate())
       .then((fx) => {
-        if (alive) setPreview(convertMinor(equalAmountMinor, effectiveCurrency, base, fx.rate))
+        if (alive) setPreview(convertMinor(totalForPreview, currency, base, fx.rate))
       })
       .catch(() => {
         if (alive) setPreview(null)
@@ -83,7 +94,7 @@ export function ExpenseForm({
     return () => {
       alive = false
     }
-  }, [splitKind, effectiveCurrency, base, equalAmountMinor, frozenRate])
+  }, [currency, base, totalForPreview, frozenRate])
 
   const toggleParticipant = (id: string) =>
     setParticipants((prev) => {
@@ -92,11 +103,6 @@ export function ExpenseForm({
       else next.add(id)
       return next
     })
-
-  const exactTotalMinor = members.reduce(
-    (sum, m) => sum + (parseMajorToMinor(exact[m.id] ?? "", base) ?? 0),
-    0,
-  )
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -120,7 +126,7 @@ export function ExpenseForm({
       body = {
         payerId,
         amountMinor: equalAmountMinor,
-        currency: effectiveCurrency,
+        currency,
         description: description.trim(),
         split: { kind: "equal", participantIds },
       }
@@ -128,7 +134,7 @@ export function ExpenseForm({
       const shares = members
         .map((m) => ({
           memberId: m.id,
-          amountMinor: parseMajorToMinor(exact[m.id] ?? "", base) ?? 0,
+          amountMinor: parseMajorToMinor(exact[m.id] ?? "", currency) ?? 0,
         }))
         .filter((s) => s.amountMinor > 0)
       if (shares.length === 0) {
@@ -138,7 +144,7 @@ export function ExpenseForm({
       body = {
         payerId,
         amountMinor: exactTotalMinor,
-        currency: base,
+        currency,
         description: description.trim(),
         split: { kind: "exact", shares },
       }
@@ -199,25 +205,26 @@ export function ExpenseForm({
             checked={splitKind === "exact"}
             onChange={() => setSplitKind("exact")}
           />
-          Exact (in {base})
+          Exact
         </label>
       </fieldset>
+
+      <label>
+        Currency
+        <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+          {CURRENCIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </label>
 
       {splitKind === "equal" ? (
         <>
           <label>
             Amount
             <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
-          </label>
-          <label>
-            Currency
-            <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-              {CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
           </label>
           {preview !== null ? <p data-testid="fx-preview">≈ {formatMoney(preview, base)}</p> : null}
           <fieldset>
@@ -236,7 +243,7 @@ export function ExpenseForm({
         </>
       ) : (
         <fieldset>
-          <legend>Exact amounts ({base})</legend>
+          <legend>Exact amounts ({currency})</legend>
           {members.map((m) => (
             <label key={m.id}>
               {m.name}
@@ -248,7 +255,8 @@ export function ExpenseForm({
               />
             </label>
           ))}
-          <p data-testid="exact-total">Total {formatMoney(exactTotalMinor, base)}</p>
+          <p data-testid="exact-total">Total {formatMoney(exactTotalMinor, currency)}</p>
+          {preview !== null ? <p data-testid="fx-preview">≈ {formatMoney(preview, base)}</p> : null}
         </fieldset>
       )}
 

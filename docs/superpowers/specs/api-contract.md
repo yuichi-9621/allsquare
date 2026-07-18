@@ -32,8 +32,11 @@ type Member = { id: string; name: string; sortOrder: number }
 
 type SplitEqual = { kind: "equal"; participantIds: string[] }
 type SplitExact = { kind: "exact"; shares: { memberId: string; amountMinor: number }[] }
-// SplitExact.shares are in GROUP BASE CURRENCY minor units and must sum to the
-// expense's converted base total (design §6 note; matches core `splitExact`).
+// SplitExact.shares are in the EXPENSE's `currency` minor units and must sum to
+// `amountMinor` (the expense total, same currency). Their base values are
+// DERIVED at settlement via the frozen rate, with per-share rounding
+// reconciled so they sum exactly to the converted base total (no cent lost).
+// [v1.1: was base-currency-only; foreign-currency exact splits now supported.]
 
 type Expense = {
   id: string
@@ -77,8 +80,9 @@ for today's date (carry-forward on non-publishing days), then stores it.
 - Body:
   `{ payerId: string; amountMinor: number; currency: string; description: string; split: SplitEqual | SplitExact }`
 - 201 → `Expense`
-- 400 if `split.kind === "exact"` and shares don't sum to the converted base total,
-  or if `payerId`/participant ids are not group members.
+- 400 if `split.kind === "exact"` and shares don't sum to `amountMinor` (the
+  expense total, in the expense currency), or if `payerId`/participant ids are
+  not group members.
 - 400 if `amountMinor` (and each exact `shares[].amountMinor`) is not a safe,
   non-negative integer. The worker MUST call `core.assertSafeMinor` on every
   incoming money value before persisting — `@allsquare/core` performs no input
@@ -116,7 +120,8 @@ Preview a frozen rate (used by the expense form to show "≈ $X" before submit).
   `core.ExpenseInput`'s equal split uses `memberIds`. This is deliberate (wire vs
   domain vocabulary); the worker maps `participantIds` → `memberIds` when building
   `core.ExpenseInput`. `SplitExact.shares` (`{memberId, amountMinor}`) is identical
-  on both sides, and its `amountMinor` values are in GROUP BASE CURRENCY minor
-  units (core validates they sum to the converted base total).
+  on both sides, and its `amountMinor` values are in the EXPENSE currency; core
+  converts each to base via the frozen rate at settlement, reconciling rounding
+  so the shares sum exactly to the converted base total.
 - The web app never imports `@allsquare/core`; it consumes `/settlement` output.
   (Optional later optimization: share core for optimistic UI. Out of scope v1.)
