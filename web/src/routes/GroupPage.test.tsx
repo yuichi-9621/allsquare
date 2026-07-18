@@ -46,6 +46,60 @@ test("loads the group and prompts the member picker", async () => {
   screen.getByRole("heading", { name: "Settle up" })
 })
 
+test("the expense form is collapsed until you tap Add an expense", async () => {
+  const user = userEvent.setup()
+  renderAt()
+  await waitFor(() => screen.getByRole("heading", { name: "Kyoto Trip" }))
+
+  // Overview leads: the form is hidden, only the open button shows.
+  expect(screen.queryByRole("heading", { name: "Add an expense" })).toBeNull()
+  await user.click(screen.getByRole("button", { name: "Add an expense" }))
+
+  // The form is now revealed.
+  await screen.findByRole("heading", { name: "Add an expense" })
+  screen.getByRole("textbox", { name: "Description" })
+
+  // Cancel returns to the overview.
+  await user.click(screen.getByRole("button", { name: "Cancel" }))
+  await waitFor(() => expect(screen.queryByRole("heading", { name: "Add an expense" })).toBeNull())
+})
+
+test("tapping Edit on an expense opens the form in edit mode", async () => {
+  const withExpense: GroupState = {
+    ...state,
+    expenses: [
+      {
+        id: "e1",
+        payerId: "m1",
+        amountMinor: 3000,
+        currency: "USD",
+        fxRateToBase: 1,
+        fxRateDate: "2026-07-16",
+        description: "Taxi",
+        split: { kind: "equal", participantIds: ["m1", "m2"] },
+        createdAt: "2026-07-16T00:00:00Z",
+      },
+    ],
+  }
+  server.use(
+    http.get("http://localhost/api/groups/abc123", () => HttpResponse.json(withExpense)),
+    http.get("http://localhost/api/groups/abc123/settlement", () => HttpResponse.json(settlement)),
+  )
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter initialEntries={["/g/abc123"]}>
+      <Routes>
+        <Route path="/g/:slug" element={<GroupPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+  await screen.findByText("Taxi")
+  // No edit form is open yet.
+  expect(screen.queryByRole("heading", { name: "Edit expense" })).toBeNull()
+  await user.click(screen.getByRole("button", { name: "Edit Taxi" }))
+  await screen.findByRole("heading", { name: "Edit expense" })
+})
+
 test("adding your name from the picker adds you and identifies you", async () => {
   let added = false
   const withCarol: GroupState = {

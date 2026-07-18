@@ -262,7 +262,7 @@ export function ExpenseForm({
 
       {error ? <p role="alert">{error}</p> : null}
       <div className="form-actions">
-        {editing && onCancel ? (
+        {onCancel ? (
           <button type="button" className="ghost" onClick={onCancel}>
             Cancel
           </button>

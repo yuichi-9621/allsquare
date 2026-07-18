@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { AddMember } from "../components/AddMember"
 import { BalanceList } from "../components/BalanceList"
@@ -20,6 +20,10 @@ export function GroupPage() {
   const { state, error, refresh } = useGroup(slug)
   const [activeId, setActiveId] = useState<string | null>(() => getActiveMemberId(slug))
   const [editingId, setEditingId] = useState<string | null>(null)
+  // The expense form is collapsed by default so the overview leads; it opens on
+  // demand (adding) or whenever an expense is being edited.
+  const [adding, setAdding] = useState(false)
+  const formRef = useRef<HTMLDivElement>(null)
   // Settle-up shows EXACT cents by default; the trip menu can opt into rounding.
   const [rounding, setRounding] = useState<Rounding | undefined>(undefined)
 
@@ -65,12 +69,26 @@ export function GroupPage() {
     [slug, refresh],
   )
 
+  const closeForm = useCallback(() => {
+    setAdding(false)
+    setEditingId(null)
+  }, [])
+
+  // Bring the form into view when it opens — most useful when editing an
+  // expense from the list further down the page. Guarded for jsdom (no scroll).
+  useEffect(() => {
+    if (adding || editingId !== null) {
+      formRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" })
+    }
+  }, [adding, editingId])
+
   if (error) return <p role="alert">This group could not be loaded.</p>
   if (!state) return <p>Loading…</p>
 
   const { group, members, expenses } = state
   const shareUrl = `${window.location.origin}/g/${group.slug}`
   const editingExpense = editingId ? expenses.find((e) => e.id === editingId) : undefined
+  const formOpen = adding || editingExpense !== undefined
 
   return (
     <main>
@@ -102,17 +120,30 @@ export function GroupPage() {
         </p>
       )}
 
-      {/* Add an expense — the primary action, first. One form, two modes; a
-          fresh key per target re-initialises it from the expense being edited. */}
-      <ExpenseForm
-        key={editingId ?? "new"}
-        group={group}
-        members={members}
-        defaultPayerId={activeId}
-        onAdded={refresh}
-        expense={editingExpense}
-        onCancel={editingExpense ? () => setEditingId(null) : undefined}
-      />
+      {/* Add an expense — the primary action, first. Collapsed to a button so
+          the overview (expenses + settle-up) leads; the form opens on demand,
+          or when editing an expense. One form, two modes; a fresh key per
+          target re-initialises it from the expense being edited. */}
+      <div className="add-expense-slot" ref={formRef}>
+        {formOpen ? (
+          <ExpenseForm
+            key={editingId ?? "new"}
+            group={group}
+            members={members}
+            defaultPayerId={activeId}
+            onAdded={async () => {
+              await refresh()
+              closeForm()
+            }}
+            expense={editingExpense}
+            onCancel={closeForm}
+          />
+        ) : (
+          <button type="button" className="add-expense-open" onClick={() => setAdding(true)}>
+            Add an expense
+          </button>
+        )}
+      </div>
 
       <section aria-label="Expenses" className="expenses-section">
         <h2>Expenses</h2>

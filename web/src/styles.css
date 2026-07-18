@@ -5,25 +5,34 @@
    untouched. System font stacks only — no network fonts (offline PWA / CSP). */
 
 :root {
-  --bg: #06150e;
-  --card: #0d2419;
-  --panel: #143726;
-  --field: #081e14;
-  --border: rgba(220, 250, 232, 0.1);
-  --border-strong: rgba(220, 250, 232, 0.2);
+  /* Deep emerald, layered — surfaces get a gradient + a brass-tinted top
+     highlight (--edge-light) so panels read dimensional, not flat. */
+  --bg: #04120c;
+  --card: #0a1e14;
+  --card-hi: #10301f;
+  --panel: #0f2c1d;
+  --panel-hi: #164027;
+  --field: #071a11;
+  --border: rgba(220, 250, 232, 0.09);
+  --border-strong: rgba(220, 250, 232, 0.18);
+  --edge-light: rgba(232, 200, 138, 0.14);
 
-  --text: #e6f4ec;
-  --text-dim: #8fb8a3;
+  --text: #eaf5ee;
+  --text-dim: #93b9a5;
 
   --accent: #34d399;
   --accent-bright: #6ee7b7;
-  --accent-ink: #052117;
+  --accent-ink: #05231a;
+  /* brass — the richness signal. Decorative/structural only; emerald stays the
+     one interactive accent. */
+  --gold: #e8c88a;
+  --gold-dim: #b0894e;
   --lime: #a3e635;
   --rose: #fb7185;
 
-  --radius: 16px;
-  --radius-sm: 10px;
-  --shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.7);
+  --radius: 18px;
+  --radius-sm: 11px;
+  --shadow: 0 28px 64px -26px rgba(0, 0, 0, 0.82), 0 3px 12px -8px rgba(0, 0, 0, 0.65);
   --ring: 0 0 0 3px rgba(52, 211, 153, 0.35);
 
   --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -42,8 +51,11 @@ body {
   font-family: var(--font);
   color: var(--text);
   background: var(--bg);
-  /* faint control-tower glow at the top edge */
-  background-image: radial-gradient(120% 60% at 50% -10%, rgba(52, 211, 153, 0.12), transparent 60%);
+  /* Layered atmosphere: an emerald control-tower glow up top, a faint brass
+     wash low-left, and a deep vignette — depth without a flat wall of green. */
+  background-image: radial-gradient(130% 70% at 50% -12%, rgba(52, 211, 153, 0.16), transparent 62%),
+    radial-gradient(90% 60% at 8% 108%, rgba(232, 200, 138, 0.07), transparent 60%),
+    radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.5));
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
@@ -86,18 +98,18 @@ body {
   position: relative;
 }
 
-/* emerald "boarding" square marks the wordmark */
+/* brass "boarding" square marks the wordmark — the richness cue up front */
 .brand::before {
   content: "";
   position: absolute;
   left: 0;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) rotate(45deg);
   width: 0.5rem;
   height: 0.5rem;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
+  border-radius: 1px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  box-shadow: 0 0 10px rgba(232, 200, 138, 0.5);
 }
 
 .brand:hover {
@@ -120,23 +132,55 @@ body {
   flex-direction: column;
   gap: 1.25rem;
   padding: clamp(1.25rem, 5vw, 2rem);
-  background: var(--card);
+  /* gradient surface + brass top-highlight = a lifted, dimensional card */
+  background: linear-gradient(168deg, var(--card-hi), var(--card) 62%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), inset 0 1px 0 0 var(--edge-light);
   animation: rise 0.35s ease both;
 }
 
 /* ---- Nested panels --------------------------------------------------- */
 main > section,
-main > form {
+main > form,
+.add-expense-slot > form {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
   padding: 1rem 1.1rem;
-  background: var(--panel);
+  background: linear-gradient(168deg, var(--panel-hi), var(--panel) 70%);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  /* faint top highlight — light catching the panel's leading edge */
+  box-shadow: inset 0 1px 0 0 var(--edge-light);
+}
+
+/* ---- Collapsed add-expense: one prominent primary in the overview ---- */
+.add-expense-open {
+  align-self: stretch;
+  width: 100%;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 10px 26px -12px var(--accent), inset 0 1px 0 0 rgba(255, 255, 255, 0.28);
+}
+
+.add-expense-open::before {
+  content: "+ ";
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+.add-expense-open:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent-bright));
+  border-color: var(--accent-bright);
+  color: var(--accent-ink);
+  box-shadow: 0 12px 30px -10px var(--accent), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
 }
 
 /* ---- Headings: departures-board wordmark ----------------------------- */
@@ -155,19 +199,21 @@ h1 {
   color: var(--text);
 }
 
-/* small emerald tick before the trip/app title (dashboard h1 + trip header h1) */
+/* brass gem before the trip/app title (dashboard h1 + trip header h1) — the
+   page's signature mark, cut as a small facet that slowly catches the light */
 .app > main > h1::before,
 .trip-header > h1::before {
   content: "";
   display: inline-block;
-  width: 0.6rem;
-  height: 0.6rem;
-  margin-right: 0.55rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-  vertical-align: 0.08em;
-  animation: pulse 2.4s ease-in-out infinite;
+  width: 0.58rem;
+  height: 0.58rem;
+  margin-right: 0.6rem;
+  transform: rotate(45deg);
+  border-radius: 1px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  box-shadow: 0 0 12px rgba(232, 200, 138, 0.55);
+  vertical-align: 0.06em;
+  animation: pulse 2.8s ease-in-out infinite;
 }
 
 h2 {
@@ -305,10 +351,10 @@ button:disabled {
   transform: none;
 }
 
-/* primary calls to action: filled emerald, board-label type */
+/* primary calls to action: filled emerald with a top sheen, board-label type */
 button[type="submit"] {
   align-self: stretch;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
   border-color: var(--accent);
   color: var(--accent-ink);
   font-family: var(--mono);
@@ -316,13 +362,14 @@ button[type="submit"] {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.75rem 1rem;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.28);
 }
 
 button[type="submit"]:hover:not(:disabled) {
-  background: var(--accent-bright);
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent-bright));
   border-color: var(--accent-bright);
   color: var(--accent-ink);
-  box-shadow: 0 0 22px -4px var(--accent);
+  box-shadow: 0 0 24px -4px var(--accent), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
 }
 
 /* ---- Lists: money rows ---------------------------------------------- */
@@ -787,7 +834,7 @@ ul[aria-label="Expenses"] > li.expense {
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.4rem 0 0.4rem 0.7rem;
-  border-left: 2px solid var(--border-strong);
+  border-left: 2px solid var(--gold-dim);
 }
 
 .expense-breakdown > li {
