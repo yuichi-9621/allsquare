@@ -32,11 +32,12 @@ test("equal split: shows a live base preview and POSTs an equal expense", async 
     }),
   )
   const onAdded = vi.fn()
-  const user = userEvent.setup()
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
   render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={onAdded} />)
 
   await user.type(screen.getByRole("textbox", { name: "Description" }), "Ramen")
-  await user.selectOptions(screen.getByRole("combobox", { name: "Currency" }), "JPY")
+  await user.click(screen.getByRole("combobox", { name: "Currency" }))
+  await user.click(await screen.findByRole("option", { name: "JPY" }))
   await user.type(screen.getByRole("textbox", { name: "Amount" }), "5000")
 
   // 5000 JPY * 0.0066 = 3300 cents = $33.00
@@ -59,7 +60,7 @@ test("exact split: entered in base currency, POSTs shares that sum to the total"
     }),
   )
   const onAdded = vi.fn()
-  const user = userEvent.setup()
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
   render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={onAdded} />)
 
   await user.type(screen.getByRole("textbox", { name: "Description" }), "Wagyu")
@@ -92,12 +93,13 @@ test("exact split in a foreign currency posts shares in that currency", async ()
     }),
   )
   const onAdded = vi.fn()
-  const user = userEvent.setup()
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
   render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={onAdded} />)
 
   await user.type(screen.getByRole("textbox", { name: "Description" }), "Gelato")
   await user.click(screen.getByRole("radio", { name: "Exact" }))
-  await user.selectOptions(screen.getByRole("combobox", { name: "Currency" }), "EUR")
+  await user.click(screen.getByRole("combobox", { name: "Currency" }))
+  await user.click(await screen.findByRole("option", { name: "EUR" }))
   await user.type(screen.getByRole("textbox", { name: "Exact amount for Alice" }), "10")
   await user.type(screen.getByRole("textbox", { name: "Exact amount for Bob" }), "5")
 
@@ -120,7 +122,7 @@ test("exact split in a foreign currency posts shares in that currency", async ()
 
 test("blocks submit with an invalid amount", async () => {
   const onAdded = vi.fn()
-  const user = userEvent.setup()
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
   render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={onAdded} />)
   await user.type(screen.getByRole("textbox", { name: "Description" }), "Bad")
   await user.click(screen.getByRole("button", { name: "Add expense" }))
@@ -150,7 +152,7 @@ test("edit mode: prefills from the expense and PATCHes the changes", async () =>
   )
   const onAdded = vi.fn()
   const onCancel = vi.fn()
-  const user = userEvent.setup()
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
   render(
     <ExpenseForm
       group={group}
@@ -179,7 +181,7 @@ test("edit mode: prefills from the expense and PATCHes the changes", async () =>
 test("edit mode: Cancel exits without saving", async () => {
   const onAdded = vi.fn()
   const onCancel = vi.fn()
-  const user = userEvent.setup()
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
   render(
     <ExpenseForm
       group={group}
