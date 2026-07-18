@@ -1,4 +1,14 @@
-import { useEffect, useRef, useState } from "react"
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@allsquare/ui"
 import type { Rounding } from "../lib/types"
 import { AddMember } from "./AddMember"
 import { RenameTrip } from "./RenameTrip"
@@ -12,7 +22,8 @@ const ROUNDING_OPTIONS: { label: string; value: Rounding | "exact" }[] = [
 ]
 
 // The trip's overflow menu: everything secondary lives here so the trip screen
-// stays add → see → settle. A simple disclosure (click ⋮ or outside to close).
+// stays add → see → settle. A Popover disclosure — Radix manages open/close,
+// outside-click dismissal, and aria-expanded/aria-haspopup on the trigger.
 export function TripMenu({
   slug,
   title,
@@ -28,65 +39,49 @@ export function TripMenu({
   onRounding: (r: Rounding | undefined) => void
   onChanged: () => void
 }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener("mousedown", onDoc)
-    return () => document.removeEventListener("mousedown", onDoc)
-  }, [open])
-
   return (
-    <div className="trip-menu" ref={ref}>
-      <button
-        type="button"
-        className="menu-toggle"
-        aria-label="Trip menu"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        ⋮
-      </button>
-      {open ? (
-        <div className="menu-panel" role="menu" aria-label="Trip options">
-          <div className="menu-item">
-            <h3>Rename trip</h3>
-            <RenameTrip slug={slug} title={title} onRenamed={onChanged} />
-          </div>
-          <div className="menu-item">
-            <h3>Share</h3>
-            <ShareBar url={shareUrl} />
-          </div>
-          <div className="menu-item">
-            <h3>Add member</h3>
-            <AddMember slug={slug} onAdded={onChanged} />
-          </div>
-          <div className="menu-item">
-            <label>
-              Round settle-up
-              <select
-                value={rounding ?? "exact"}
-                onChange={(e) =>
-                  onRounding(
-                    e.target.value === "exact" ? undefined : (Number(e.target.value) as Rounding),
-                  )
-                }
-              >
-                {ROUNDING_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="ghost" className="menu-toggle" aria-label="Trip menu">
+          ⋮
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent aria-label="Trip options">
+        <div className="menu-item">
+          <h3>Rename trip</h3>
+          <RenameTrip slug={slug} title={title} onRenamed={onChanged} />
         </div>
-      ) : null}
-    </div>
+        <div className="menu-item">
+          <h3>Share</h3>
+          <ShareBar url={shareUrl} />
+        </div>
+        <div className="menu-item">
+          <h3>Add member</h3>
+          <AddMember slug={slug} onAdded={onChanged} />
+        </div>
+        <div className="menu-item">
+          <label htmlFor="rounding-trigger">
+            Round settle-up
+            <Select
+              value={String(rounding ?? "exact")}
+              onValueChange={(value) =>
+                onRounding(value === "exact" ? undefined : (Number(value) as Rounding))
+              }
+            >
+              <SelectTrigger id="rounding-trigger" aria-label="Round settle-up">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROUNDING_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={String(o.value)}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

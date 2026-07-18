@@ -1,3 +1,4 @@
+import { Button } from "@allsquare/ui"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { TripCard } from "../components/TripCard"
@@ -17,17 +18,23 @@ export function Dashboard() {
   }
 
   return (
-    <main>
-      <h1>Your trips</h1>
-      <p className="lede">Trips you've started or opened on this device.</p>
-      <ul aria-label="Your trips" className="trip-list">
+    <main className="flex w-full flex-col gap-5">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">
+          Your trips
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Trips you've started or opened on this device.
+        </p>
+      </div>
+      <ul aria-label="Your trips" className="flex flex-col gap-3">
         {trips.map((trip) => (
           <TripCard key={trip.slug} trip={trip} onForget={forget} />
         ))}
       </ul>
-      <Link className="cta-link" to="/new">
-        Start a group
-      </Link>
+      <Button asChild variant="outline" className="w-full">
+        <Link to="/new">Start a group</Link>
+      </Button>
     </main>
   )
 }

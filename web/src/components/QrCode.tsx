@@ -24,6 +24,7 @@ export function QrCode({ value, size = 160 }: { value: string; size?: number }) 
       height={size}
       viewBox={`0 0 ${count} ${count}`}
       shapeRendering="crispEdges"
+      className="rounded-md border border-border bg-white shadow-sm"
     >
       <rect x={0} y={0} width={count} height={count} fill="#ffffff" />
       <g fill="#000000">{rects}</g>

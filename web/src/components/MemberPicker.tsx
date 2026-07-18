@@ -1,3 +1,4 @@
+import { Button } from "@allsquare/ui"
 import type { Member } from "../lib/types"
 
 export function MemberPicker({
@@ -10,12 +11,12 @@ export function MemberPicker({
   return (
     <section aria-label="Who are you?">
       <h2>Who are you?</h2>
-      <ul>
+      <ul className="flex flex-wrap gap-2">
         {members.map((m) => (
           <li key={m.id}>
-            <button type="button" onClick={() => onPick(m.id)}>
+            <Button type="button" variant="outline" onClick={() => onPick(m.id)}>
               I'm {m.name}
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

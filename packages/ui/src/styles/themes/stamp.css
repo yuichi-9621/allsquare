@@ -1,0 +1,37 @@
+/* "Stamp" theme. Colors are HSL channel triplets so Tailwind's
+   hsl(var(--x) / <alpha>) opacity modifiers work. Rendered values equal the
+   source hex in the plan's palette table. */
+:root {
+  /* cover context (Black Forest ground) */
+  --background: 88 39% 15%; /* #283618 */
+  --foreground: 52 92% 94%; /* #FEFAE0 cornsilk text on cover */
+  --card: 52 92% 94%; /* paper */
+  --card-foreground: 88 39% 15%; /* ink on paper */
+  --popover: 52 92% 94%;
+  --popover-foreground: 88 39% 15%;
+  --primary: 28 67% 44%; /* copper */
+  --primary-foreground: 52 92% 94%;
+  --secondary: 74 32% 32%; /* olive */
+  --secondary-foreground: 52 92% 94%;
+  --muted: 88 30% 22%;
+  --muted-foreground: 52 25% 72%; /* dim cornsilk on cover */
+  --accent: 32 65% 62%; /* caramel, used as hover/selected tint base */
+  --accent-foreground: 88 39% 15%;
+  --border-solid: 52 30% 80%;
+  --input: 52 30% 80%;
+  --ring: 28 67% 44%; /* copper focus */
+  --foil: 32 65% 62%; /* caramel */
+  --success: 94 49% 33%; /* owed green */
+  --danger: 28 67% 44%; /* owe copper */
+  --radius: 8px;
+}
+
+/* Paper context: any subtree that sits on cornsilk re-binds the surface tokens,
+   so descendants read ink/olive-grey automatically. Card & Popover add this. */
+.surface-paper {
+  --foreground: 88 39% 15%; /* ink */
+  --muted-foreground: 57 23% 40%; /* olive-grey #7C7A4E */
+  --border-solid: 88 39% 15%; /* ink hairlines, used at low alpha */
+  --success: 94 49% 33%;
+  --danger: 28 67% 44%;
+}

@@ -1,0 +1,41 @@
+/* @import must precede all other rules (CSS spec + Vite + Biome). fonts.css and
+   themes/stamp.css are safe to hoist: fonts.css only declares @font-face/:root
+   vars, and stamp.css only declares unlayered :root/.surface-paper custom
+   properties — none of which depend on source position. */
+@import "./fonts.css";
+@import "./themes/stamp.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base element defaults live AFTER @tailwind base so they are the LAST rules in
+   the `base` layer — guaranteeing they win same-layer ties against Tailwind
+   Preflight (e.g. the default border-color reset). This is the canonical
+   shadcn ordering; it must stay below the @tailwind directives. */
+@layer base {
+  * {
+    border-color: hsl(var(--border-solid) / 0.16);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.4);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}

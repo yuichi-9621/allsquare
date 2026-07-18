@@ -1,3 +1,4 @@
+import { Button, Card, CardContent } from "@allsquare/ui"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { AddMember } from "../components/AddMember"
@@ -91,9 +92,11 @@ export function GroupPage() {
   const formOpen = adding || editingExpense !== undefined
 
   return (
-    <main>
-      <div className="trip-header">
-        <h1>{group.title}</h1>
+    <main className="flex w-full flex-col gap-6">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">
+          {group.title}
+        </h1>
         <TripMenu
           slug={slug}
           title={group.title}
@@ -105,17 +108,19 @@ export function GroupPage() {
       </div>
 
       {activeId === null ? (
-        <>
-          <MemberPicker members={members} onPick={pick} />
-          <AddMember
-            slug={slug}
-            label="Not listed? Add your name"
-            submitLabel="Add & continue"
-            onAdded={addSelf}
-          />
-        </>
+        <Card>
+          <CardContent className="gap-4 pt-3.5">
+            <MemberPicker members={members} onPick={pick} />
+            <AddMember
+              slug={slug}
+              label="Not listed? Add your name"
+              submitLabel="Add & continue"
+              onAdded={addSelf}
+            />
+          </CardContent>
+        </Card>
       ) : (
-        <p className="identity">
+        <p className="text-sm text-muted-foreground">
           You are {members.find((m) => m.id === activeId)?.name ?? "a member"}.
         </p>
       )}
@@ -124,29 +129,35 @@ export function GroupPage() {
           the overview (expenses + settle-up) leads; the form opens on demand,
           or when editing an expense. One form, two modes; a fresh key per
           target re-initialises it from the expense being edited. */}
-      <div className="add-expense-slot" ref={formRef}>
+      <div ref={formRef}>
         {formOpen ? (
-          <ExpenseForm
-            key={editingId ?? "new"}
-            group={group}
-            members={members}
-            defaultPayerId={activeId}
-            onAdded={async () => {
-              await refresh()
-              closeForm()
-            }}
-            expense={editingExpense}
-            onCancel={closeForm}
-          />
+          <Card>
+            <CardContent className="gap-4 pt-3.5">
+              <ExpenseForm
+                key={editingId ?? "new"}
+                group={group}
+                members={members}
+                defaultPayerId={activeId}
+                onAdded={async () => {
+                  await refresh()
+                  closeForm()
+                }}
+                expense={editingExpense}
+                onCancel={closeForm}
+              />
+            </CardContent>
+          </Card>
         ) : (
-          <button type="button" className="add-expense-open" onClick={() => setAdding(true)}>
+          <Button type="button" size="lg" className="w-full" onClick={() => setAdding(true)}>
             Add an expense
-          </button>
+          </Button>
         )}
       </div>
 
-      <section aria-label="Expenses" className="expenses-section">
-        <h2>Expenses</h2>
+      <section aria-label="Expenses" className="flex flex-col gap-3">
+        <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          Expenses
+        </h2>
         <ExpenseList
           expenses={expenses}
           members={members}
@@ -157,7 +168,7 @@ export function GroupPage() {
       </section>
 
       {/* Settle up — read last: where everyone stands, then who pays who. */}
-      <section aria-label="Settle up section" className="settle-section">
+      <section aria-label="Settle up section" className="flex flex-col gap-3">
         <BalanceList
           balances={settlement?.balances ?? []}
           members={members}

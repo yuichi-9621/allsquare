@@ -19,6 +19,7 @@ export function InstallHint() {
   return (
     <button
       type="button"
+      className="rounded-md border border-border bg-card px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
       onClick={() => {
         void deferred.prompt()
         setDeferred(null)

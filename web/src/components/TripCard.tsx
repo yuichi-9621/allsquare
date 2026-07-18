@@ -1,3 +1,5 @@
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
+import type { BadgeProps } from "@allsquare/ui"
 import { Link } from "react-router-dom"
 import { useTripStatus } from "../hooks/useTripStatus"
 import { getActiveMemberId } from "../lib/activeMember"
@@ -5,6 +7,19 @@ import { formatMoney } from "../lib/money"
 import type { SavedTrip } from "../lib/recentTrips"
 
 type StatusKind = "loading" | "unavailable" | "settled" | "owing"
+
+const STATUS_VARIANT: Record<StatusKind, NonNullable<BadgeProps["variant"]>> = {
+  loading: "muted",
+  unavailable: "danger",
+  settled: "success",
+  owing: "foil",
+}
+
+const POSITION_CLASS: Record<"owed" | "owe" | "square", string> = {
+  owed: "text-success",
+  owe: "text-danger",
+  square: "text-muted-foreground",
+}
 
 export function TripCard({
   trip,
@@ -54,27 +69,33 @@ export function TripCard({
   }
 
   return (
-    <li className="trip">
-      <Link className="trip-open" to={`/g/${trip.slug}`}>
-        <span className="trip-head">
-          <span className="trip-title">{trip.title}</span>
-          <span className="trip-currency">{trip.baseCurrency}</span>
-        </span>
-        {position ? (
-          <span className={`trip-position trip-position--${position.tone}`}>{position.text}</span>
-        ) : null}
-        <span className="trip-status" data-status={statusKind}>
-          {statusText}
-        </span>
-      </Link>
-      <button
-        type="button"
-        className="trip-forget"
-        aria-label={`Remove ${trip.title}`}
-        onClick={() => onForget(trip.slug)}
-      >
-        Remove
-      </button>
+    <li>
+      <Card className="relative">
+        <Link to={`/g/${trip.slug}`} className="block rounded-lg focus-visible:outline-none">
+          <CardHeader>
+            <CardTitle>{trip.title}</CardTitle>
+            <Badge variant="muted">{trip.baseCurrency}</Badge>
+          </CardHeader>
+          <CardContent>
+            {position ? (
+              <p className={`text-sm ${POSITION_CLASS[position.tone]}`}>{position.text}</p>
+            ) : null}
+            <Badge variant={STATUS_VARIANT[statusKind]} data-status={statusKind} className="w-fit">
+              {statusText}
+            </Badge>
+          </CardContent>
+        </Link>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={`Remove ${trip.title}`}
+          onClick={() => onForget(trip.slug)}
+          className="absolute right-2 top-2"
+        >
+          Remove
+        </Button>
+      </Card>
     </li>
   )
 }

@@ -1,3 +1,16 @@
+import {
+  Button,
+  Checkbox,
+  Input,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@allsquare/ui"
 import { type FormEvent, useEffect, useState } from "react"
 import { addExpense, editExpense, getFx } from "../lib/api"
 import { todayISODate } from "../lib/date"
@@ -173,71 +186,86 @@ export function ExpenseForm({
   return (
     <form onSubmit={onSubmit} aria-label={editing ? "Edit expense" : "Add expense"}>
       <h2>{editing ? "Edit expense" : "Add an expense"}</h2>
-      <label>
-        Payer
-        <select value={payerId} onChange={(e) => setPayerId(e.target.value)}>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Description
-        <input value={description} onChange={(e) => setDescription(e.target.value)} />
-      </label>
+      <div>
+        <Label htmlFor="payer-trigger">Payer</Label>
+        <Select value={payerId} onValueChange={setPayerId}>
+          <SelectTrigger id="payer-trigger" aria-label="Payer">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {members.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
       <fieldset>
         <legend>Split</legend>
-        <label>
-          <input
-            type="radio"
-            name="splitKind"
-            checked={splitKind === "equal"}
-            onChange={() => setSplitKind("equal")}
-          />
-          Equal
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="splitKind"
-            checked={splitKind === "exact"}
-            onChange={() => setSplitKind("exact")}
-          />
-          Exact
-        </label>
+        <RadioGroup
+          value={splitKind}
+          onValueChange={(value) => setSplitKind(value as "equal" | "exact")}
+        >
+          <div>
+            <RadioGroupItem value="equal" id="split-equal" aria-label="Equal" />
+            <Label htmlFor="split-equal">Equal</Label>
+          </div>
+          <div>
+            <RadioGroupItem value="exact" id="split-exact" aria-label="Exact" />
+            <Label htmlFor="split-exact">Exact</Label>
+          </div>
+        </RadioGroup>
       </fieldset>
 
-      <label>
-        Currency
-        <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-          {CURRENCIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div>
+        <Label htmlFor="currency-trigger">Currency</Label>
+        <Select value={currency} onValueChange={setCurrency}>
+          <SelectTrigger id="currency-trigger" aria-label="Currency">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CURRENCIES.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {splitKind === "equal" ? (
         <>
-          <label>
-            Amount
-            <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
-          </label>
+          <div>
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              inputMode="decimal"
+            />
+          </div>
           {preview !== null ? <p data-testid="fx-preview">≈ {formatMoney(preview, base)}</p> : null}
           <fieldset>
             <legend>Participants</legend>
             {members.map((m) => (
-              <label key={m.id}>
-                <input
-                  type="checkbox"
+              <div key={m.id}>
+                <Checkbox
+                  id={`participant-${m.id}`}
+                  aria-label={m.name}
                   checked={participants.has(m.id)}
-                  onChange={() => toggleParticipant(m.id)}
+                  onCheckedChange={() => toggleParticipant(m.id)}
                 />
-                {m.name}
-              </label>
+                <Label htmlFor={`participant-${m.id}`}>{m.name}</Label>
+              </div>
             ))}
           </fieldset>
         </>
@@ -245,15 +273,16 @@ export function ExpenseForm({
         <fieldset>
           <legend>Exact amounts ({currency})</legend>
           {members.map((m) => (
-            <label key={m.id}>
-              {m.name}
-              <input
+            <div key={m.id}>
+              <Label htmlFor={`exact-${m.id}`}>{m.name}</Label>
+              <Input
+                id={`exact-${m.id}`}
                 aria-label={`Exact amount for ${m.name}`}
                 value={exact[m.id] ?? ""}
                 onChange={(e) => setExact((prev) => ({ ...prev, [m.id]: e.target.value }))}
                 inputMode="decimal"
               />
-            </label>
+            </div>
           ))}
           <p data-testid="exact-total">Total {formatMoney(exactTotalMinor, currency)}</p>
           {preview !== null ? <p data-testid="fx-preview">≈ {formatMoney(preview, base)}</p> : null}
@@ -261,15 +290,15 @@ export function ExpenseForm({
       )}
 
       {error ? <p role="alert">{error}</p> : null}
-      <div className="form-actions">
+      <div className="flex items-stretch gap-2">
         {onCancel ? (
-          <button type="button" className="ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         ) : null}
-        <button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting} className="flex-1">
           {editing ? "Save changes" : "Add expense"}
-        </button>
+        </Button>
       </div>
     </form>
   )

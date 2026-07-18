@@ -1,5 +1,6 @@
-import { formatMoney } from "../lib/money"
+import { Stamp } from "@allsquare/ui"
 import type { Member, Transfer } from "../lib/types"
+import { SettleRow } from "./SettleRow"
 
 // Presentational: the rounding choice now lives in the trip menu, and the
 // balances/transfers are fetched once by GroupPage. `transfers === null` = loading.
@@ -12,23 +13,27 @@ export function SettleUp({
   members: Member[]
   baseCurrency: string
 }) {
-  const nameOf = new Map(members.map((m) => [m.id, m.name]))
   return (
     <section aria-label="Settle up">
-      <h2>Settle up</h2>
+      <div className="flex items-center gap-2">
+        <h2>Settle up</h2>
+        <Stamp state={transfers && transfers.length === 0 ? "square" : "pending"} />
+      </div>
       {transfers === null ? (
         <p>Calculating…</p>
       ) : transfers.length === 0 ? (
         <p>Everyone is all square.</p>
       ) : (
-        <ul aria-label="Transfers">
+        <div aria-label="Transfers" className="flex flex-col gap-2">
           {transfers.map((t) => (
-            <li key={`${t.from}-${t.to}-${t.amountMinor}`}>
-              {nameOf.get(t.from) ?? "?"} pays {nameOf.get(t.to) ?? "?"}{" "}
-              {formatMoney(t.amountMinor, baseCurrency)}
-            </li>
+            <SettleRow
+              key={`${t.from}-${t.to}-${t.amountMinor}`}
+              transfer={t}
+              members={members}
+              baseCurrency={baseCurrency}
+            />
           ))}
-        </ul>
+        </div>
       )}
     </section>
   )

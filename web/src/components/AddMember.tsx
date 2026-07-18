@@ -1,4 +1,5 @@
-import { type FormEvent, useState } from "react"
+import { Button, Input, Label } from "@allsquare/ui"
+import { type FormEvent, useId, useState } from "react"
 import { addMember } from "../lib/api"
 import type { Member } from "../lib/types"
 
@@ -16,6 +17,7 @@ export function AddMember({
   label?: string
   submitLabel?: string
 }) {
+  const inputId = useId()
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -41,15 +43,24 @@ export function AddMember({
   }
 
   return (
-    <form onSubmit={onSubmit} aria-label="Add member" className="add-member">
-      <label>
-        {label}
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
-      </label>
-      {error ? <p role="alert">{error}</p> : null}
-      <button type="submit" disabled={submitting}>
+    <form onSubmit={onSubmit} aria-label="Add member" className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        <Label htmlFor={inputId}>{label}</Label>
+        <Input
+          id={inputId}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+        />
+      </div>
+      {error ? (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
+      <Button type="submit" disabled={submitting}>
         {submitLabel}
-      </button>
+      </Button>
     </form>
   )
 }
