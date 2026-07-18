@@ -63,3 +63,58 @@ test("GET /api/groups/:slug returns state; 404 for unknown", async () => {
   // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
   expect(((await missing.json()) as any).error.code).toBe("not_found")
 })
+
+test("PATCH /api/groups/:slug renames the group and returns updated state", async () => {
+  const created = (await (
+    await post("/api/groups", {
+      title: "Old name",
+      baseCurrency: "USD",
+      rounding: 1,
+      memberNames: ["A", "B"],
+    })
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+    .json()) as any
+  const res = await SELF.fetch(`https://x/api/groups/${created.group.slug}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ title: "New name" }),
+  })
+  expect(res.status).toBe(200)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const state = (await res.json()) as any
+  expect(state.group.title).toBe("New name")
+  // persisted
+  const reread = (await (
+    await SELF.fetch(`https://x/api/groups/${created.group.slug}`)
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+    .json()) as any
+  expect(reread.group.title).toBe("New name")
+})
+
+test("PATCH rejects an empty title (400) and unknown group (404)", async () => {
+  const created = (await (
+    await post("/api/groups", {
+      title: "T",
+      baseCurrency: "USD",
+      rounding: 1,
+      memberNames: ["A"],
+    })
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+    .json()) as any
+  const bad = await SELF.fetch(`https://x/api/groups/${created.group.slug}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ title: "" }),
+  })
+  expect(bad.status).toBe(400)
+
+  const missing = await SELF.fetch("https://x/api/groups/nope", {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ title: "X" }),
+  })
+  expect(missing.status).toBe(404)
+})

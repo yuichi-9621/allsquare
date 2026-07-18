@@ -7,24 +7,25 @@ import { ExpenseList } from "../components/ExpenseList"
 import { InstallHint } from "../components/InstallHint"
 import { MemberPicker } from "../components/MemberPicker"
 import { SettleUp } from "../components/SettleUp"
-import { ShareBar } from "../components/ShareBar"
+import { TripMenu } from "../components/TripMenu"
 import { useGroup } from "../hooks/useGroup"
 import { useSettlement } from "../hooks/useSettlement"
 import { getActiveMemberId, setActiveMemberId } from "../lib/activeMember"
 import { deleteExpense } from "../lib/api"
 import { recordTrip } from "../lib/recentTrips"
-import type { Member } from "../lib/types"
+import type { Member, Rounding } from "../lib/types"
 
 export function GroupPage() {
   const { slug = "" } = useParams()
   const { state, error, refresh } = useGroup(slug)
   const [activeId, setActiveId] = useState<string | null>(() => getActiveMemberId(slug))
   const [editingId, setEditingId] = useState<string | null>(null)
-  // Refetch settlement whenever the ledger's CONTENT changes (add / delete /
-  // edit / poll). A content key — not the expense count — so an edit that keeps
-  // the same number of expenses still refreshes balances.
+  // Settle-up shows EXACT cents by default; the trip menu can opt into rounding.
+  const [rounding, setRounding] = useState<Rounding | undefined>(undefined)
+
+  // Content key (not count) so a same-count edit still refetches balances.
   const revision = JSON.stringify(state?.expenses ?? [])
-  const settlement = useSettlement(slug, state?.group.rounding ?? 1, revision)
+  const settlement = useSettlement(slug, rounding, revision)
 
   // Remember every group opened on this device so it shows on the dashboard.
   useEffect(() => {
@@ -73,9 +74,18 @@ export function GroupPage() {
 
   return (
     <main>
-      <h1>{group.title}</h1>
-      <ShareBar url={shareUrl} />
-      <InstallHint />
+      <div className="trip-header">
+        <h1>{group.title}</h1>
+        <TripMenu
+          slug={slug}
+          title={group.title}
+          shareUrl={shareUrl}
+          rounding={rounding}
+          onRounding={setRounding}
+          onChanged={refresh}
+        />
+      </div>
+
       {activeId === null ? (
         <>
           <MemberPicker members={members} onPick={pick} />
@@ -87,25 +97,13 @@ export function GroupPage() {
           />
         </>
       ) : (
-        <>
-          <p>You are {members.find((m) => m.id === activeId)?.name ?? "a member"}.</p>
-          <AddMember slug={slug} onAdded={() => void refresh()} />
-        </>
+        <p className="identity">
+          You are {members.find((m) => m.id === activeId)?.name ?? "a member"}.
+        </p>
       )}
-      <BalanceList
-        balances={settlement?.balances ?? []}
-        members={members}
-        baseCurrency={group.baseCurrency}
-      />
-      <ExpenseList
-        expenses={expenses}
-        members={members}
-        baseCurrency={group.baseCurrency}
-        onDelete={onDeleteExpense}
-        onEdit={setEditingId}
-      />
-      {/* One form area, two modes. A fresh key per target re-initialises the
-          form state from the expense being edited (or resets to "add"). */}
+
+      {/* Add an expense — the primary action, first. One form, two modes; a
+          fresh key per target re-initialises it from the expense being edited. */}
       <ExpenseForm
         key={editingId ?? "new"}
         group={group}
@@ -115,7 +113,33 @@ export function GroupPage() {
         expense={editingExpense}
         onCancel={editingExpense ? () => setEditingId(null) : undefined}
       />
-      <SettleUp group={group} members={members} revision={revision} />
+
+      <section aria-label="Expenses" className="expenses-section">
+        <h2>Expenses</h2>
+        <ExpenseList
+          expenses={expenses}
+          members={members}
+          baseCurrency={group.baseCurrency}
+          onEdit={setEditingId}
+          onDelete={onDeleteExpense}
+        />
+      </section>
+
+      {/* Settle up — read last: where everyone stands, then who pays who. */}
+      <section aria-label="Settle up section" className="settle-section">
+        <BalanceList
+          balances={settlement?.balances ?? []}
+          members={members}
+          baseCurrency={group.baseCurrency}
+        />
+        <SettleUp
+          transfers={settlement?.transfers ?? null}
+          members={members}
+          baseCurrency={group.baseCurrency}
+        />
+      </section>
+
+      <InstallHint />
     </main>
   )
 }

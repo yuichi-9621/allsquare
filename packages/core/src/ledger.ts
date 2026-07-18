@@ -47,7 +47,9 @@ export type ExpenseInput = {
   split: { kind: "equal"; memberIds: string[] } | { kind: "exact"; shares: Share[] }
 }
 
-export type SettleOptions = { baseCurrency: string; rounding: RoundingStep }
+// `rounding` omitted → exact transfers to the minor unit (cent). A step
+// (1/10/100/1000 major units) applies lossy cash-handover rounding.
+export type SettleOptions = { baseCurrency: string; rounding?: RoundingStep | undefined }
 
 export function computeBalances(
   expenses: ExpenseInput[],
@@ -73,9 +75,12 @@ export function computeBalances(
 export function settle(expenses: ExpenseInput[], opts: SettleOptions): Transfer[] {
   const balances = computeBalances(expenses, opts.baseCurrency)
   const transfers = minimizeTransfers(balances)
-  // Handover rounding can shrink a small transfer to 0; drop those — a
-  // "pays 0" line is noise, not an instruction.
-  return roundTransfers(transfers, opts.rounding, opts.baseCurrency).filter(
-    (t) => t.amountMinor > 0,
-  )
+  // Exact by default; apply cash-handover rounding only when a step is given.
+  // Rounding can shrink a small transfer to 0; drop those — a "pays 0" line is
+  // noise, not an instruction.
+  const settled =
+    opts.rounding === undefined
+      ? transfers
+      : roundTransfers(transfers, opts.rounding, opts.baseCurrency)
+  return settled.filter((t) => t.amountMinor > 0)
 }

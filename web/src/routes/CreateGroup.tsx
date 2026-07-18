@@ -2,16 +2,13 @@ import { type FormEvent, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createGroup } from "../lib/api"
 import { recordTrip } from "../lib/recentTrips"
-import type { Rounding } from "../lib/types"
 
 const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "THB", "SGD"]
-const ROUNDINGS: Rounding[] = [1, 10, 100, 1000]
 
 export function CreateGroup() {
   const navigate = useNavigate()
   const [title, setTitle] = useState("")
   const [baseCurrency, setBaseCurrency] = useState("USD")
-  const [rounding, setRounding] = useState<Rounding>(1)
   const [memberNames, setMemberNames] = useState<string[]>(["", ""])
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -39,7 +36,7 @@ export function CreateGroup() {
       const state = await createGroup({
         title: title.trim(),
         baseCurrency,
-        rounding,
+        rounding: 1, // settle-up is exact by default; cash-rounding is an in-trip option
         memberNames: names,
       })
       recordTrip({
@@ -57,8 +54,13 @@ export function CreateGroup() {
 
   return (
     <form onSubmit={onSubmit} aria-label="Create group">
-      <h1>Start a group</h1>
-      <p className="lede">No account needed. Share the link and everyone can add expenses.</p>
+      <div className="hero">
+        <h1>Split anything on a trip. End up all square.</h1>
+        <p className="hero-sub">
+          No sign-up. Any currency. Share one link — everyone adds what they paid, and Allsquare
+          works out who owes who.
+        </p>
+      </div>
       <label>
         Trip title
         <input
@@ -73,16 +75,6 @@ export function CreateGroup() {
           {CURRENCIES.map((c) => (
             <option key={c} value={c}>
               {c}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Rounding
-        <select value={rounding} onChange={(e) => setRounding(Number(e.target.value) as Rounding)}>
-          {ROUNDINGS.map((r) => (
-            <option key={r} value={r}>
-              {r}
             </option>
           ))}
         </select>

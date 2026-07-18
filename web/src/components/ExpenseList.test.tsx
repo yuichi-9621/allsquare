@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { expect, test, vi } from "vitest"
 import type { Expense, Member } from "../lib/types"
@@ -26,9 +26,17 @@ const expenses: Expense[] = [
 test("shows the original amount as truth and the base as derived", () => {
   render(<ExpenseList expenses={expenses} members={members} baseCurrency="USD" />)
   screen.getByText("Ramen")
-  screen.getByText("paid by Alice")
+  screen.getByText("Alice paid")
   // 5000 JPY * 0.0066 = 3300 cents = $33.00
   screen.getByText("¥5,000 · ≈ $33.00")
+})
+
+test("shows a per-person breakdown in the expense currency", () => {
+  render(<ExpenseList expenses={expenses} members={members} baseCurrency="USD" />)
+  // ¥5,000 split equally between Alice & Bob -> ¥2,500 each (stacked)
+  const breakdown = screen.getByRole("list", { name: "Breakdown for Ramen" })
+  const shares = within(breakdown).getAllByText("¥2,500")
+  expect(shares).toHaveLength(2)
 })
 
 test("renders an empty state", () => {

@@ -18,6 +18,8 @@ export const createGroupSchema = z.object({
 
 export const addMemberSchema = z.object({ name: z.string().min(1) })
 
+export const groupPatchSchema = z.object({ title: z.string().min(1) })
+
 const splitEqualSchema = z.object({
   kind: z.literal("equal"),
   participantIds: z.array(z.string().min(1)).min(1),

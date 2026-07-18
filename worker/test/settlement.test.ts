@@ -66,11 +66,11 @@ test("settlement nets to zero, returns minimal transfers, uses frozen rate", asy
   expect(s.transfers.length).toBeLessThanOrEqual(2)
 })
 
-test("rounding query param overrides the group default", async () => {
-  const g = await makeGroup(["Alice", "Bob"], 10) // group default: round to nearest $10
+test("settlement is exact by default; a valid ?rounding step opts into cash rounding", async () => {
+  const g = await makeGroup(["Alice", "Bob"], 10) // stored rounding is now ignored for display
   // biome-ignore lint/suspicious/noExplicitAny: test payload shape
   const [alice, bob] = g.members.map((m: any) => m.id)
-  // Alice pays 51.00 USD split 2 ways => Bob owes 2550 cents.
+  // Alice pays 51.00 USD split 2 ways => Bob owes exactly 2550 cents.
   await postExpense(g.group.slug, {
     payerId: alice,
     amountMinor: 5100,
@@ -79,28 +79,35 @@ test("rounding query param overrides the group default", async () => {
     split: { kind: "equal", participantIds: [alice, bob] },
   })
 
-  // No query param => group default rounding=10 => nearest $10 => 2550 -> 3000.
+  // No query param => EXACT to the cent => 2550 (not the stored rounding).
   const def = (await (
     await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement`)
   )
     // biome-ignore lint/suspicious/noExplicitAny: test response shape
     .json()) as any
-  expect(def.transfers[0].amountMinor).toBe(3000)
+  expect(def.transfers[0].amountMinor).toBe(2550)
 
-  // ?rounding=1 overrides => nearest $1 => 2550 -> 2600. Differs from the default,
-  // so this assertion only passes if the query param is actually honored.
-  const override = (await (
+  // ?rounding=10 => nearest $10 => 3000.
+  const r10 = (await (
+    await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement?rounding=10`)
+  )
+    // biome-ignore lint/suspicious/noExplicitAny: test response shape
+    .json()) as any
+  expect(r10.transfers[0].amountMinor).toBe(3000)
+
+  // ?rounding=1 => nearest $1 => 2600.
+  const r1 = (await (
     await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement?rounding=1`)
   )
     // biome-ignore lint/suspicious/noExplicitAny: test response shape
     .json()) as any
-  expect(override.transfers[0].amountMinor).toBe(2600)
+  expect(r1.transfers[0].amountMinor).toBe(2600)
 
-  // An invalid rounding value falls back to the group default (200, not 400).
+  // An invalid rounding value stays exact (200, not 400).
   const garbage = await SELF.fetch(`https://x/api/groups/${g.group.slug}/settlement?rounding=7`)
   expect(garbage.status).toBe(200)
   // biome-ignore lint/suspicious/noExplicitAny: test response shape
-  expect(((await garbage.json()) as any).transfers[0].amountMinor).toBe(3000)
+  expect(((await garbage.json()) as any).transfers[0].amountMinor).toBe(2550)
 })
 
 test("404 for unknown group settlement", async () => {

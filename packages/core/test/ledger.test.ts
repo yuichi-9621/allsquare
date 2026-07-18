@@ -41,6 +41,29 @@ test("settle produces a minimal, rounded transfer set that fully clears", () => 
   for (const t of transfers) expect(t.amountMinor % 100).toBe(0) // whole dollars
 })
 
+test("settle returns exact cents when no rounding step is given", () => {
+  // €15 exact at 1.115: Bob owes Alice the exact reconciled 558, not a rounded value.
+  const exact = settle(
+    [
+      {
+        payerId: "alice",
+        amountMinor: 1500,
+        currency: "EUR",
+        fxRateToBase: 1.115,
+        split: {
+          kind: "exact",
+          shares: [
+            { memberId: "alice", amountMinor: 1000 },
+            { memberId: "bob", amountMinor: 500 },
+          ],
+        },
+      },
+    ],
+    { baseCurrency: "USD" },
+  )
+  expect(exact).toEqual([{ from: "bob", to: "alice", amountMinor: 558 }])
+})
+
 test("exact split is honored", () => {
   const bal = computeBalances(
     [

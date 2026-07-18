@@ -69,6 +69,12 @@ Full current state. **This is the polling endpoint** the web app hits.
 - 200 → `GroupState`
 - 404 if slug unknown
 
+### `PATCH /api/groups/:slug`
+Rename the group.
+- Body: `{ title: string }` (non-empty)
+- 200 → `GroupState` (updated)
+- 400 if title empty; 404 if slug unknown
+
 ### `POST /api/groups/:slug/members`
 Add a member to an existing group.
 - Body: `{ name: string }`
@@ -100,8 +106,10 @@ Soft-delete (sets `deleted_at`; row retained for history + D1 Time Travel).
 
 ### `GET /api/groups/:slug/settlement?rounding=<1|10|100|1000>`
 Server computes balances + minimal transfers via `@allsquare/core`'s `settle`.
-`rounding` query param overrides the group default for this response only (the
-web app lets users preview rounding levels without persisting).
+**Default is EXACT** (transfers to the minor unit / cent). A valid `rounding`
+step opts into lossy cash-handover rounding for this response only (preview,
+never persisted); an absent or invalid value stays exact. `balances` are always
+exact regardless. [v1.1: default was the group's stored rounding.]
 - 200 → `Settlement`
 - 404 if slug unknown
 

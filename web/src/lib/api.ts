@@ -49,6 +49,13 @@ export function getGroup(slug: string): Promise<GroupState> {
   return request<GroupState>(`/api/groups/${encodeURIComponent(slug)}`)
 }
 
+export function renameGroup(slug: string, title: string): Promise<GroupState> {
+  return request<GroupState>(`/api/groups/${encodeURIComponent(slug)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title }),
+  })
+}
+
 export function addMember(slug: string, name: string): Promise<Member> {
   return request<Member>(`/api/groups/${encodeURIComponent(slug)}/members`, {
     method: "POST",
@@ -77,10 +84,10 @@ export function deleteExpense(slug: string, id: string): Promise<void> {
   )
 }
 
-export function getSettlement(slug: string, rounding: Rounding): Promise<Settlement> {
-  return request<Settlement>(
-    `/api/groups/${encodeURIComponent(slug)}/settlement?rounding=${rounding}`,
-  )
+// rounding omitted → exact (to the cent); a step opts into cash rounding.
+export function getSettlement(slug: string, rounding?: Rounding): Promise<Settlement> {
+  const q = rounding === undefined ? "" : `?rounding=${rounding}`
+  return request<Settlement>(`/api/groups/${encodeURIComponent(slug)}/settlement${q}`)
 }
 
 export function getFx(from: string, to: string, date: string): Promise<FxPreview> {
