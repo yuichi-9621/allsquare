@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Production API on a custom domain (zone all-sqr.com, Cloudflare Registrar).
+# custom_domain=true makes Wrangler provision the DNS record + TLS cert.
+routes = [{ pattern = "api.all-sqr.com", custom_domain = true }]
+
 # Provisioning note: run `pnpm --filter @allsquare/worker exec wrangler d1 create allsquare`
 # once, then paste the returned database_id below (the local Vitest/miniflare D1 is
 # simulated and ignores this id, so tests pass with the dummy value; a real id is only
@@ -10,5 +14,5 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "allsquare"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "9807b6f8-0aaa-42b1-bfa7-ee466f86507c"
 migrations_dir = "migrations"
