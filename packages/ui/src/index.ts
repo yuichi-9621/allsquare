@@ -13,3 +13,5 @@ export {
   SelectTrigger,
   SelectValue,
 } from "./components/ui/select"
+export { Checkbox } from "./components/ui/checkbox"
+export { RadioGroup, RadioGroupItem } from "./components/ui/radio-group"
