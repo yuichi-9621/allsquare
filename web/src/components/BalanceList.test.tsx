@@ -17,7 +17,7 @@ const balances: Balance[] = [
 
 test("labels owed / owing / settled members", () => {
   render(<BalanceList balances={balances} members={members} baseCurrency="USD" />)
-  screen.getByText("Alice is owed $12.00")
-  screen.getByText("Bob owes $12.00")
-  screen.getByText("Carol is settled")
+  screen.getByText("Alice +$12.00")
+  screen.getByText("Bob −$12.00")
+  screen.getByText("Carol $0.00")
 })

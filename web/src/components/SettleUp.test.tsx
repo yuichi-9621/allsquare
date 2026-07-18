@@ -11,7 +11,8 @@ const members: Member[] = [
 test("renders each transfer line", () => {
   const transfers: Transfer[] = [{ from: "m2", to: "m1", amountMinor: 15150 }]
   render(<SettleUp transfers={transfers} members={members} baseCurrency="JPY" />)
-  screen.getByText("Bob pays Alice ¥15,150")
+  screen.getByText("Bob → Alice")
+  screen.getByText("¥15,150")
 })
 
 test("shows all-square when there are no transfers", () => {
@@ -22,4 +23,15 @@ test("shows all-square when there are no transfers", () => {
 test("shows a loading state while transfers are null", () => {
   render(<SettleUp transfers={null} members={members} baseCurrency="USD" />)
   screen.getByText("Calculating…")
+})
+
+test("stamps 'Not yet square' while there are pending transfers", () => {
+  const transfers: Transfer[] = [{ from: "m2", to: "m1", amountMinor: 15150 }]
+  render(<SettleUp transfers={transfers} members={members} baseCurrency="JPY" />)
+  screen.getByText("Not yet square")
+})
+
+test("stamps 'All square' when there are no transfers", () => {
+  render(<SettleUp transfers={[]} members={members} baseCurrency="USD" />)
+  screen.getByText("All square")
 })
