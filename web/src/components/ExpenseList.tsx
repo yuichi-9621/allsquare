@@ -14,7 +14,12 @@ export function ExpenseList({
   onDelete?: (expenseId: string) => void
   onEdit?: (expenseId: string) => void
 }) {
-  if (expenses.length === 0) return <p className="empty">No expenses yet.</p>
+  if (expenses.length === 0)
+    return (
+      <p className="rounded-md border border-dashed border-border px-4 py-5 text-center font-mono text-sm tracking-wide text-muted-foreground">
+        No expenses yet.
+      </p>
+    )
   return (
     <div aria-label="Expenses" className="flex flex-col gap-3">
       {expenses.map((e) => (

@@ -290,13 +290,13 @@ export function ExpenseForm({
       )}
 
       {error ? <p role="alert">{error}</p> : null}
-      <div className="form-actions">
+      <div className="flex items-stretch gap-2">
         {onCancel ? (
           <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel
           </Button>
         ) : null}
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting} className="flex-1">
           {editing ? "Save changes" : "Add expense"}
         </Button>
       </div>
