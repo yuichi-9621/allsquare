@@ -1,6 +1,7 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
 import { convertMinor, splitEqualMinor } from "../lib/money"
 import type { Expense, Member } from "../lib/types"
+import { MemberAvatar } from "./MemberAvatar"
 import { MoneyAmount } from "./MoneyAmount"
 
 export function ExpenseCard({
@@ -46,7 +47,8 @@ export function ExpenseCard({
         />
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <MemberAvatar members={members} memberId={expense.payerId} />
           <span className="font-semibold text-foreground">
             {nameOf.get(expense.payerId) ?? "?"}
           </span>{" "}
@@ -58,7 +60,14 @@ export function ExpenseCard({
         >
           {breakdown.map((b) => (
             <li key={b.id} className="flex items-center justify-between gap-3 text-sm">
-              <span>{nameOf.get(b.id) ?? "?"}</span>
+              <span className="flex items-center gap-1.5">
+                <MemberAvatar
+                  members={members}
+                  memberId={b.id}
+                  className="h-4 w-4 text-[0.55rem]"
+                />
+                {nameOf.get(b.id) ?? "?"}
+              </span>
               <MoneyAmount amountMinor={b.amountMinor} currency={expense.currency} />
             </li>
           ))}

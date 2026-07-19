@@ -1,5 +1,6 @@
 import { Button } from "@allsquare/ui"
 import type { Member } from "../lib/types"
+import { MemberAvatar } from "./MemberAvatar"
 
 export function MemberPicker({
   members,
@@ -23,9 +24,10 @@ export function MemberPicker({
               type="button"
               variant="outline"
               size="lg"
-              className="w-full justify-start text-base font-semibold"
+              className="w-full justify-start gap-2.5 text-base font-semibold"
               onClick={() => onPick(m.id)}
             >
+              <MemberAvatar members={members} memberId={m.id} />
               I'm {m.name}
             </Button>
           </li>

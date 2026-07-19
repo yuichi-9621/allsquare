@@ -1,6 +1,7 @@
 import { Button } from "@allsquare/ui"
 import { useState } from "react"
 import type { Member, Transfer } from "../lib/types"
+import { MemberAvatar } from "./MemberAvatar"
 import { MoneyAmount } from "./MoneyAmount"
 
 // One "who pays who" line with a Mark paid action. Recording semantics live in
@@ -37,8 +38,10 @@ export function SettleRow({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-3">
-        <span className="min-w-0 truncate">
-          {from} → {to}
+        <span className="flex min-w-0 items-center gap-1.5 truncate">
+          <MemberAvatar members={members} memberId={transfer.from} />
+          {from} → <MemberAvatar members={members} memberId={transfer.to} />
+          {to}
         </span>
         <div className="flex shrink-0 items-center gap-2.5">
           <MoneyAmount amountMinor={transfer.amountMinor} currency={baseCurrency} />

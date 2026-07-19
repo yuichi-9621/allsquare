@@ -2,6 +2,7 @@ import { Button } from "@allsquare/ui"
 import { useState } from "react"
 import { convertMinor } from "../lib/money"
 import type { Balance, Expense, Member } from "../lib/types"
+import { MemberAvatar } from "./MemberAvatar"
 import { MoneyAmount } from "./MoneyAmount"
 
 // Per-person totals, collapsed by default. "Paid" sums each member's expenses
@@ -53,7 +54,14 @@ export function MemberTotals({
             const share = paid - (netOf.get(m.id) ?? 0)
             return (
               <div key={m.id} className="contents">
-                <span className="min-w-0 truncate text-sm">{m.name}</span>
+                <span className="flex min-w-0 items-center gap-1.5 truncate text-sm">
+                  <MemberAvatar
+                    members={members}
+                    memberId={m.id}
+                    className="h-4 w-4 text-[0.55rem]"
+                  />
+                  {m.name}
+                </span>
                 <MoneyAmount amountMinor={paid} currency={baseCurrency} className="text-sm" />
                 <MoneyAmount
                   amountMinor={share}
