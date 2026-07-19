@@ -55,8 +55,8 @@ const FAQS = [
     a: "No. Start a group, share the link, and everyone is in. Nobody signs up, ever.",
   },
   {
-    q: "Is Allsquare really free?",
-    a: "Yes. Unlimited expenses, unlimited members, and every currency, at no cost.",
+    q: "Do my friends need to install anything?",
+    a: "No. The link opens in any browser, on any phone or laptop. Allsquare can also be added to the home screen like an app.",
   },
   {
     q: "How does multi-currency splitting work?",
@@ -64,7 +64,7 @@ const FAQS = [
   },
   {
     q: "How is Allsquare different from Splitwise?",
-    a: "There are no accounts, nothing to install, and no paywall. Unlimited expenses and multi-currency support are free.",
+    a: "There are no accounts and nothing to install. Start a group, share the link, and everyone is in within seconds.",
   },
 ]
 
@@ -87,7 +87,7 @@ export function Landing() {
           <Link to="/new">Start a group</Link>
         </Button>
         <p className="font-mono text-[0.62rem] uppercase tracking-wider text-muted-foreground">
-          Free · no accounts · no cookies · works offline
+          No accounts · no cookies · any currency · works offline
         </p>
       </section>
 
@@ -152,7 +152,7 @@ export function Landing() {
         <Stamp state="square" className="scale-150" />
         <p className="text-muted-foreground">Every group ends the same way.</p>
         <Button asChild size="lg" className="w-full sm:w-fit sm:px-10">
-          <Link to="/new">Start a group for free</Link>
+          <Link to="/new">Start a group now</Link>
         </Button>
         <p className="text-xs text-muted-foreground">
           No cookies, no tracking. Your trip list stays on your device.

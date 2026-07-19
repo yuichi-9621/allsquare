@@ -191,9 +191,9 @@ export function ExpenseForm({
     >
       <h2 className="text-lg font-semibold">{editing ? "Edit expense" : "Add an expense"}</h2>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="payer-trigger">Payer</Label>
+        <Label htmlFor="payer-trigger">Who paid?</Label>
         <Select value={payerId} onValueChange={setPayerId}>
-          <SelectTrigger id="payer-trigger" aria-label="Payer">
+          <SelectTrigger id="payer-trigger" aria-label="Payer" className="font-semibold">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

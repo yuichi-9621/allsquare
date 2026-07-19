@@ -46,7 +46,12 @@ export function ExpenseCard({
         />
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">{nameOf.get(expense.payerId) ?? "?"} paid</p>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {nameOf.get(expense.payerId) ?? "?"}
+          </span>{" "}
+          paid
+        </p>
         <ul
           aria-label={`Breakdown for ${expense.description}`}
           className="flex flex-col gap-1 border-l-2 border-foil/50 pl-3"

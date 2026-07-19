@@ -3,7 +3,7 @@ import { useEffect } from "react"
 export const DEFAULT_META = {
   title: "Allsquare | Split group bills with no sign-up",
   description:
-    "Free group bill splitter with no sign-up. Share one link, add expenses in any currency, and settle with the fewest payments. A free Splitwise alternative for trips, dinners, and shared houses.",
+    "Group bill splitter with no sign-up. Share one link, add expenses in any currency, and settle with the fewest payments. A Splitwise alternative for trips, dinners, and shared houses.",
 }
 
 // Per-route document metadata. Google renders the SPA, so client-set titles

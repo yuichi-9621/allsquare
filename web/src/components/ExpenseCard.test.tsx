@@ -37,7 +37,7 @@ const exactExpense: Expense = {
 test("shows the description, total (with base), and who paid", () => {
   render(<ExpenseCard expense={expense} members={members} baseCurrency="USD" />)
   screen.getByText("Taxi")
-  screen.getByText("Alice paid")
+  screen.getByText((_, el) => el?.tagName === "P" && el.textContent?.replace(/\s+/g, " ").trim() === "Alice paid")
   // 5000 JPY * 0.0066 = 3300 cents = $33.00
   screen.getByText("¥5,000 · ≈ $33.00")
 })
