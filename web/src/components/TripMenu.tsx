@@ -102,7 +102,7 @@ export function TripMenu({
         <DialogContent>
           <DialogTitle>Share this trip</DialogTitle>
           <DialogDescription>
-            Anyone with the link can open the trip — no account needed.
+            Anyone with the link can open the trip. No account needed.
           </DialogDescription>
           <ShareBar url={shareUrl} />
         </DialogContent>

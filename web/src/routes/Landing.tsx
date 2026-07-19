@@ -9,7 +9,7 @@ const USE_CASES = [
     stamp: "Trip abroad",
     ink: "border-foil text-foil",
     tilt: "-rotate-2",
-    desc: "Yen in Tokyo, euros in Paris — everyone still settles in one currency.",
+    desc: "Yen in Tokyo, euros in Paris. Everyone still settles in one currency.",
   },
   {
     stamp: "Group dinner",
@@ -21,7 +21,7 @@ const USE_CASES = [
     stamp: "Road trip",
     ink: "border-secondary text-secondary",
     tilt: "rotate-2",
-    desc: "Gas, tolls, snacks, the motel — add them as they happen.",
+    desc: "Gas, tolls, snacks, the motel. Add them as they happen.",
   },
   {
     stamp: "Shared house",
@@ -34,7 +34,7 @@ const USE_CASES = [
 const STEPS = [
   {
     title: "Start a group, share one link",
-    desc: "No sign-up, nothing to install. The link is the invite — anyone who opens it is in.",
+    desc: "No sign-up, nothing to install. The link is the invite, and anyone who opens it is in.",
   },
   {
     title: "Everyone adds what they paid",
@@ -42,7 +42,7 @@ const STEPS = [
   },
   {
     title: "Settle with the fewest payments",
-    desc: "Allsquare works out who pays who — once. Mark payments as they land, and the stamp drops.",
+    desc: "Allsquare works out who pays who, in as few payments as possible. Mark them paid and the stamp drops.",
   },
 ]
 
@@ -114,7 +114,7 @@ export function Landing() {
         <Stamp state="square" className="scale-150" />
         <p className="text-muted-foreground">Every group ends the same way.</p>
         <Button asChild size="lg" className="w-full">
-          <Link to="/new">Start a group — it's free</Link>
+          <Link to="/new">Start a group for free</Link>
         </Button>
       </section>
     </main>

@@ -60,7 +60,7 @@ export function CreateGroup() {
           Split anything on a trip. End up all square.
         </h1>
         <p className="text-sm text-muted-foreground">
-          No sign-up. Any currency. Share one link — everyone adds what they paid, and Allsquare
+          No sign-up. Any currency. Share one link, everyone adds what they paid, and Allsquare
           works out who owes who.
         </p>
       </div>
