@@ -1,5 +1,13 @@
 import { newId, newSlug } from "./ids.js"
-import type { Expense, GroupState, Member, Rounding, SplitEqual, SplitExact } from "./types.js"
+import type {
+  Expense,
+  ExpenseItem,
+  GroupState,
+  Member,
+  Rounding,
+  SplitEqual,
+  SplitExact,
+} from "./types.js"
 
 export type GroupRow = {
   id: string
@@ -20,13 +28,14 @@ type ExpenseRow = {
   description: string
   kind: "expense" | "repayment"
   category: string | null
+  items: string | null
   split_type: "equal" | "exact"
   created_at: string
 }
 type ShareRow = { member_id: string; share_amount_minor: number }
 
 const EXPENSE_COLS =
-  "id, payer_member_id, amount_minor, currency, fx_rate_to_base, fx_rate_date, description, kind, category, split_type, created_at"
+  "id, payer_member_id, amount_minor, currency, fx_rate_to_base, fx_rate_date, description, kind, category, items, split_type, created_at"
 
 function toMember(r: MemberRow): Member {
   return {
@@ -69,6 +78,7 @@ async function toExpense(db: D1Database, row: ExpenseRow): Promise<Expense> {
     description: row.description,
     kind: row.kind ?? "expense",
     category: row.category ?? null,
+    items: row.items ? JSON.parse(row.items) : null,
     split,
     createdAt: row.created_at,
   }
@@ -222,6 +232,7 @@ export type WriteExpenseInput = {
   description: string
   kind: "expense" | "repayment"
   category: string | null
+  items: ExpenseItem[] | null
   splitType: "equal" | "exact"
   shareRows: { memberId: string; amountMinor: number }[]
 }
@@ -268,7 +279,7 @@ export async function insertExpense(db: D1Database, input: WriteExpenseInput): P
   const statements: D1PreparedStatement[] = [
     db
       .prepare(
-        "INSERT INTO expenses (id, group_id, payer_member_id, amount_minor, currency, fx_rate_to_base, fx_rate_date, description, kind, category, split_type, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+        "INSERT INTO expenses (id, group_id, payer_member_id, amount_minor, currency, fx_rate_to_base, fx_rate_date, description, kind, category, items, split_type, created_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
       )
       .bind(
         id,
@@ -281,6 +292,7 @@ export async function insertExpense(db: D1Database, input: WriteExpenseInput): P
         input.description,
         input.kind,
         input.category,
+        input.items ? JSON.stringify(input.items) : null,
         input.splitType,
         createdAt,
       ),
@@ -300,7 +312,7 @@ export async function updateExpense(
   const statements: D1PreparedStatement[] = [
     db
       .prepare(
-        "UPDATE expenses SET payer_member_id = ?, amount_minor = ?, currency = ?, fx_rate_to_base = ?, fx_rate_date = ?, description = ?, kind = ?, category = ?, split_type = ? WHERE id = ? AND group_id = ?",
+        "UPDATE expenses SET payer_member_id = ?, amount_minor = ?, currency = ?, fx_rate_to_base = ?, fx_rate_date = ?, description = ?, kind = ?, category = ?, items = ?, split_type = ? WHERE id = ? AND group_id = ?",
       )
       .bind(
         input.payerId,
@@ -311,6 +323,7 @@ export async function updateExpense(
         input.description,
         input.kind,
         input.category,
+        input.items ? JSON.stringify(input.items) : null,
         input.splitType,
         id,
         input.groupId,

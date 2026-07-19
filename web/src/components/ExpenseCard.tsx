@@ -62,24 +62,50 @@ export function ExpenseCard({
           </span>{" "}
           paid
         </p>
-        <ul
-          aria-label={`Breakdown for ${expense.description}`}
-          className="flex flex-col gap-1 border-l-2 border-foil/50 pl-3"
-        >
-          {breakdown.map((b) => (
-            <li key={b.id} className="flex items-center justify-between gap-3 text-sm">
-              <span className="flex items-center gap-1.5">
-                <MemberAvatar
-                  members={members}
-                  memberId={b.id}
-                  className="h-4 w-4 text-[0.55rem]"
-                />
-                {nameOf.get(b.id) ?? "?"}
-              </span>
-              <MoneyAmount amountMinor={b.amountMinor} currency={expense.currency} />
-            </li>
-          ))}
-        </ul>
+        {expense.items?.length ? (
+          <ul
+            aria-label={`Items for ${expense.description}`}
+            className="flex flex-col gap-1 border-l-2 border-foil/50 pl-3"
+          >
+            {expense.items.map((item) => (
+              <li key={item.name} className="flex items-center justify-between gap-3 text-sm">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate">{item.name}</span>
+                  <span className="flex shrink-0 items-center gap-0.5">
+                    {item.memberIds.map((id) => (
+                      <MemberAvatar
+                        key={id}
+                        members={members}
+                        memberId={id}
+                        className="h-4 w-4 text-[0.55rem]"
+                      />
+                    ))}
+                  </span>
+                </span>
+                <MoneyAmount amountMinor={item.amountMinor} currency={expense.currency} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul
+            aria-label={`Breakdown for ${expense.description}`}
+            className="flex flex-col gap-1 border-l-2 border-foil/50 pl-3"
+          >
+            {breakdown.map((b) => (
+              <li key={b.id} className="flex items-center justify-between gap-3 text-sm">
+                <span className="flex items-center gap-1.5">
+                  <MemberAvatar
+                    members={members}
+                    memberId={b.id}
+                    className="h-4 w-4 text-[0.55rem]"
+                  />
+                  {nameOf.get(b.id) ?? "?"}
+                </span>
+                <MoneyAmount amountMinor={b.amountMinor} currency={expense.currency} />
+              </li>
+            ))}
+          </ul>
+        )}
         {onEdit || onDelete ? (
           <div className="flex gap-2 pt-1">
             {onEdit ? (

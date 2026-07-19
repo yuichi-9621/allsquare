@@ -21,6 +21,8 @@ export type Split = SplitEqual | SplitExact
 
 export type ExpenseKind = "expense" | "repayment"
 
+export type ExpenseItem = { name: string; amountMinor: number; memberIds: string[] }
+
 export type Expense = {
   id: string
   payerId: string
@@ -31,6 +33,7 @@ export type Expense = {
   description: string
   kind?: ExpenseKind
   category?: string | null
+  items?: ExpenseItem[] | null
   split: Split
   createdAt: string
 }
@@ -51,6 +54,7 @@ export type CreateGroupBody = {
 export type ExpenseBody = {
   kind?: ExpenseKind
   category?: string | null
+  items?: ExpenseItem[] | null
   payerId: string
   amountMinor: number
   currency: string

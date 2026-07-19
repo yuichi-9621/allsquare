@@ -28,6 +28,27 @@ type Prepared =
     }
   | { ok: false; message: string }
 
+// Items are display data compiled to exact shares by the client; the server
+// still guards the invariants so a hand-rolled request can't desync them.
+function validateItems(body: ExpenseBody, ids: Set<string>): string | null {
+  if (!body.items) return null
+  if (body.split.kind !== "exact") return "items require an exact split"
+  let sum = 0
+  for (const item of body.items) {
+    for (const m of item.memberIds) {
+      if (!ids.has(m)) return `item member ${m} is not a member`
+    }
+    if (new Set(item.memberIds).size !== item.memberIds.length) {
+      return "duplicate member id in an item"
+    }
+    sum += item.amountMinor
+  }
+  if (sum !== body.amountMinor) {
+    return `items sum to ${sum}, expected the expense total ${body.amountMinor}`
+  }
+  return null
+}
+
 // Validate members + (for exact splits) that shares sum to the expense total.
 async function prepareShares(
   db: D1Database,
@@ -37,6 +58,9 @@ async function prepareShares(
   const ids = await memberIds(db, groupId)
   if (!ids.has(body.payerId))
     return { ok: false, message: `payerId ${body.payerId} is not a member` }
+
+  const itemsError = validateItems(body, ids)
+  if (itemsError) return { ok: false, message: itemsError }
 
   if (body.split.kind === "equal") {
     for (const id of body.split.participantIds) {
@@ -101,6 +125,7 @@ expenses.post("/:slug/expenses", async (c) => {
     kind: body.kind,
     // Repayments are bookkeeping, never trip spending.
     category: body.kind === "repayment" ? null : (body.category ?? null),
+    items: body.kind === "repayment" ? null : (body.items ?? null),
     splitType: prepared.splitType,
     shareRows: prepared.shareRows,
   }
@@ -138,6 +163,7 @@ expenses.patch("/:slug/expenses/:id", async (c) => {
     description: body.description,
     kind: body.kind,
     category: body.kind === "repayment" ? null : (body.category ?? null),
+    items: body.kind === "repayment" ? null : (body.items ?? null),
     splitType: prepared.splitType,
     shareRows: prepared.shareRows,
   }

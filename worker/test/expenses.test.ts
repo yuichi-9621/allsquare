@@ -354,3 +354,70 @@ test("an invalid category is 400", async () => {
   })
   expect(res.status).toBe(400)
 })
+
+test("items round-trip and enforce the exact-split + sum invariants", async () => {
+  const g = await makeGroup()
+  const [a, b] = g.members
+  const items = [
+    { name: "Ramen", amountMinor: 1400, memberIds: [a.id] },
+    { name: "Beer", amountMinor: 1600, memberIds: [a.id, b.id] },
+  ]
+  const res = await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      payerId: a.id,
+      amountMinor: 3000,
+      currency: "USD",
+      description: "Dinner",
+      category: "food",
+      items,
+      split: {
+        kind: "exact",
+        shares: [
+          { memberId: a.id, amountMinor: 2200 },
+          { memberId: b.id, amountMinor: 800 },
+        ],
+      },
+    }),
+  })
+  expect(res.status).toBe(201)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const created = (await res.json()) as any
+  expect(created.items).toEqual(items)
+
+  // and it comes back in group state
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const state = (await (await SELF.fetch(`https://x/api/groups/${g.group.slug}`)).json()) as any
+  expect(state.expenses[0].items).toEqual(items)
+
+  // sum mismatch is 400
+  const bad = await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      payerId: a.id,
+      amountMinor: 9999,
+      currency: "USD",
+      description: "Dinner",
+      items,
+      split: { kind: "exact", shares: [{ memberId: a.id, amountMinor: 9999 }] },
+    }),
+  })
+  expect(bad.status).toBe(400)
+
+  // items with an equal split is 400
+  const wrongSplit = await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      payerId: a.id,
+      amountMinor: 3000,
+      currency: "USD",
+      description: "Dinner",
+      items,
+      split: { kind: "equal", participantIds: [a.id, b.id] },
+    }),
+  })
+  expect(wrongSplit.status).toBe(400)
+})

@@ -52,9 +52,16 @@ export const CATEGORY_IDS = [
   "other",
 ] as const
 
+const itemSchema = z.object({
+  name: z.string().min(1).max(120),
+  amountMinor: z.number().int().positive(),
+  memberIds: z.array(z.string()).min(1),
+})
+
 export const expenseBodySchema = z.object({
   kind: z.enum(["expense", "repayment"]).default("expense"),
   category: z.enum(CATEGORY_IDS).nullish(),
+  items: z.array(itemSchema).min(1).max(200).nullish(),
   payerId: z.string().min(1),
   amountMinor: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
   currency,

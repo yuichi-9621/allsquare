@@ -283,3 +283,50 @@ test("Add again chip prefills description, amount, currency, and participants", 
   // payer did NOT follow (whoever adds now probably paid this time)
   expect(screen.getByRole("combobox", { name: "Payer" })).toHaveTextContent("Alice")
 })
+
+test("items mode: compiles items to exact shares and POSTs both", async () => {
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
+  let posted: unknown = null
+  server.use(
+    http.post("http://localhost/api/groups/abc123/expenses", async ({ request }) => {
+      posted = await request.json()
+      return HttpResponse.json({}, { status: 201 })
+    }),
+  )
+  render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={vi.fn()} />)
+  await user.type(screen.getByRole("textbox", { name: "Description" }), "Dinner")
+  await user.click(screen.getByRole("radio", { name: "Items" }))
+
+  // Item 1: Ramen 14.00 for Alice only (deselect Bob)
+  await user.type(screen.getByRole("textbox", { name: "Item 1 name" }), "Ramen")
+  await user.type(screen.getByRole("textbox", { name: "Item 1 amount" }), "14.00")
+  await user.click(screen.getByRole("button", { name: "Item 1: Bob" }))
+
+  // Item 2: Beer 16.00 for everyone (default)
+  await user.click(screen.getByRole("button", { name: "Add item" }))
+  await user.type(screen.getByRole("textbox", { name: "Item 2 name" }), "Beer")
+  await user.type(screen.getByRole("textbox", { name: "Item 2 amount" }), "16.00")
+
+  expect(screen.getByTestId("items-total")).toHaveTextContent("Total $30.00")
+  await user.click(screen.getByRole("button", { name: "Add expense" }))
+
+  await waitFor(() => expect(posted).not.toBeNull())
+  expect(posted).toEqual({
+    payerId: "m1",
+    amountMinor: 3000,
+    currency: "USD",
+    description: "Dinner",
+    category: "other",
+    items: [
+      { name: "Ramen", amountMinor: 1400, memberIds: ["m1"] },
+      { name: "Beer", amountMinor: 1600, memberIds: ["m1", "m2"] },
+    ],
+    split: {
+      kind: "exact",
+      shares: [
+        { memberId: "m1", amountMinor: 2200 },
+        { memberId: "m2", amountMinor: 800 },
+      ],
+    },
+  })
+})

@@ -15,8 +15,10 @@ import { type FormEvent, useEffect, useState } from "react"
 import { addExpense, editExpense, getFx } from "../lib/api"
 import { CATEGORIES, type CategoryId } from "../lib/categories"
 import { todayISODate } from "../lib/date"
+import { compileItems } from "../lib/items"
 import { convertMinor, formatMoney, minorToInput, parseMajorToMinor } from "../lib/money"
-import type { Expense, ExpenseBody, Group, Member } from "../lib/types"
+import type { Expense, ExpenseBody, ExpenseItem, Group, Member } from "../lib/types"
+import { MemberAvatar } from "./MemberAvatar"
 
 const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "THB", "SGD"]
 
@@ -47,7 +49,20 @@ export function ExpenseForm({
   const [category, setCategory] = useState<CategoryId>(
     (expense?.category as CategoryId | null | undefined) ?? "other",
   )
-  const [splitKind, setSplitKind] = useState<"equal" | "exact">(expense?.split.kind ?? "equal")
+  const [splitKind, setSplitKind] = useState<"equal" | "exact" | "items">(
+    expense?.items?.length ? "items" : (expense?.split.kind ?? "equal"),
+  )
+  // Items mode rows; amounts stay strings while typing (same as exact mode).
+  type ItemRow = { name: string; amount: string; memberIds: string[] }
+  const [itemRows, setItemRows] = useState<ItemRow[]>(() =>
+    expense?.items?.length
+      ? expense.items.map((it) => ({
+          name: it.name,
+          amount: minorToInput(it.amountMinor, expense.currency),
+          memberIds: it.memberIds,
+        }))
+      : [{ name: "", amount: "", memberIds: members.map((m) => m.id) }],
+  )
   const [currency, setCurrency] = useState(expense?.currency ?? base)
   const [amount, setAmount] = useState(
     expense && expense.split.kind === "equal"
@@ -81,6 +96,10 @@ export function ExpenseForm({
     (sum, m) => sum + (parseMajorToMinor(exact[m.id] ?? "", currency) ?? 0),
     0,
   )
+  const itemsTotalMinor = itemRows.reduce(
+    (sum, r) => sum + (parseMajorToMinor(r.amount, currency) ?? 0),
+    0,
+  )
 
   // Editing without changing the currency keeps the ORIGINAL frozen rate
   // (the app's core promise), so preview against it — never a live rate.
@@ -88,7 +107,15 @@ export function ExpenseForm({
 
   // The total currently entered (equal amount or exact sum), for the preview.
   const totalForPreview =
-    splitKind === "equal" ? equalAmountMinor : exactTotalMinor > 0 ? exactTotalMinor : null
+    splitKind === "equal"
+      ? equalAmountMinor
+      : splitKind === "exact"
+        ? exactTotalMinor > 0
+          ? exactTotalMinor
+          : null
+        : itemsTotalMinor > 0
+          ? itemsTotalMinor
+          : null
 
   // "≈ base" preview when the expense is in a non-base currency. Uses the frozen
   // rate when it applies; otherwise a live GET /api/fx (matching the server,
@@ -121,6 +148,17 @@ export function ExpenseForm({
     setDescription(e.description)
     setCurrency(e.currency)
     setCategory((e.category as CategoryId | null | undefined) ?? "other")
+    if (e.items?.length) {
+      setSplitKind("items")
+      setItemRows(
+        e.items.map((it) => ({
+          name: it.name,
+          amount: minorToInput(it.amountMinor, e.currency),
+          memberIds: it.memberIds,
+        })),
+      )
+      return
+    }
     setSplitKind(e.split.kind)
     if (e.split.kind === "equal") {
       setAmount(minorToInput(e.amountMinor, e.currency))
@@ -142,6 +180,20 @@ export function ExpenseForm({
       return next
     })
 
+  const setItemRow = (i: number, patch: Partial<ItemRow>) =>
+    setItemRows((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+  const toggleItemMember = (i: number, memberId: string) =>
+    setItemRows((rows) =>
+      rows.map((r, j) => {
+        if (j !== i) return r
+        const has = r.memberIds.includes(memberId)
+        return {
+          ...r,
+          memberIds: has ? r.memberIds.filter((m) => m !== memberId) : [...r.memberIds, memberId],
+        }
+      }),
+    )
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setError(null)
@@ -151,7 +203,37 @@ export function ExpenseForm({
     }
 
     let body: ExpenseBody
-    if (splitKind === "equal") {
+    if (splitKind === "items") {
+      const items: ExpenseItem[] = []
+      for (const r of itemRows) {
+        const amountMinor = parseMajorToMinor(r.amount, currency)
+        if (r.name.trim() === "" || amountMinor === null || amountMinor <= 0) {
+          setError("Every item needs a name and a valid amount.")
+          return
+        }
+        if (r.memberIds.length === 0) {
+          setError(`Assign "${r.name.trim()}" to at least one person.`)
+          return
+        }
+        // Keep assignee order stable (server member order) so shares compile
+        // identically on every device.
+        const memberIds = members.map((m) => m.id).filter((id) => r.memberIds.includes(id))
+        items.push({ name: r.name.trim(), amountMinor, memberIds })
+      }
+      if (items.length === 0) {
+        setError("Add at least one item.")
+        return
+      }
+      body = {
+        payerId,
+        amountMinor: itemsTotalMinor,
+        currency,
+        description: description.trim(),
+        category,
+        items,
+        split: { kind: "exact", shares: compileItems(items) },
+      }
+    } else if (splitKind === "equal") {
       if (equalAmountMinor === null) {
         setError("Enter a valid amount.")
         return
@@ -290,7 +372,7 @@ export function ExpenseForm({
         </legend>
         <RadioGroup
           value={splitKind}
-          onValueChange={(value) => setSplitKind(value as "equal" | "exact")}
+          onValueChange={(value) => setSplitKind(value as "equal" | "exact" | "items")}
           className="gap-2.5"
         >
           <div className="flex items-center gap-2.5">
@@ -303,6 +385,12 @@ export function ExpenseForm({
             <RadioGroupItem value="exact" id="split-exact" aria-label="Exact" />
             <Label htmlFor="split-exact" className="text-foreground">
               Exact
+            </Label>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <RadioGroupItem value="items" id="split-items" aria-label="Items" />
+            <Label htmlFor="split-items" className="text-foreground">
+              Items
             </Label>
           </div>
         </RadioGroup>
@@ -324,7 +412,101 @@ export function ExpenseForm({
         </Select>
       </div>
 
-      {splitKind === "equal" ? (
+      {splitKind === "items" ? (
+        <fieldset className="space-y-3">
+          <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            Items ({currency})
+          </legend>
+          {itemRows.map((row, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional edit slots
+            <div key={i} className="flex flex-col gap-1.5 rounded-md border border-input p-2.5">
+              <div className="flex items-center gap-2">
+                <Input
+                  aria-label={`Item ${i + 1} name`}
+                  placeholder="Item"
+                  value={row.name}
+                  onChange={(e) => setItemRow(i, { name: e.target.value })}
+                  className="min-w-0 flex-1"
+                />
+                <Input
+                  aria-label={`Item ${i + 1} amount`}
+                  placeholder="0.00"
+                  inputMode="decimal"
+                  value={row.amount}
+                  onChange={(e) => setItemRow(i, { amount: e.target.value })}
+                  className="w-24 shrink-0"
+                />
+                {itemRows.length > 1 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Remove item ${i + 1}`}
+                    onClick={() => setItemRows((rows) => rows.filter((_, j) => j !== i))}
+                  >
+                    ✕
+                  </Button>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {members.map((m) => {
+                  const on = row.memberIds.includes(m.id)
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      aria-pressed={on}
+                      aria-label={`Item ${i + 1}: ${m.name}`}
+                      onClick={() => toggleItemMember(i, m.id)}
+                      className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-sm transition-colors ${
+                        on
+                          ? "border-primary bg-primary/10 font-semibold text-foreground"
+                          : "border-input text-muted-foreground"
+                      }`}
+                    >
+                      <MemberAvatar
+                        members={members}
+                        memberId={m.id}
+                        className="h-4 w-4 text-[0.55rem]"
+                      />
+                      {m.name}
+                    </button>
+                  )
+                })}
+                <button
+                  type="button"
+                  aria-label={`Item ${i + 1}: everyone`}
+                  onClick={() => setItemRow(i, { memberIds: members.map((m) => m.id) })}
+                  className="rounded-full border border-input px-2 py-0.5 text-sm text-muted-foreground"
+                >
+                  Everyone
+                </button>
+              </div>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setItemRows((rows) => [
+                ...rows,
+                { name: "", amount: "", memberIds: members.map((m) => m.id) },
+              ])
+            }
+          >
+            Add item
+          </Button>
+          <p data-testid="items-total" className="text-sm">
+            Total {formatMoney(itemsTotalMinor, currency)}
+          </p>
+          {preview !== null ? (
+            <p data-testid="fx-preview" className="text-sm text-muted-foreground">
+              ≈ {formatMoney(preview, base)}
+            </p>
+          ) : null}
+        </fieldset>
+      ) : splitKind === "equal" ? (
         <>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="amount">Amount</Label>
