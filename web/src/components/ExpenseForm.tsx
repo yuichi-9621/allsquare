@@ -13,6 +13,7 @@ import {
 } from "@allsquare/ui"
 import { type FormEvent, useEffect, useState } from "react"
 import { addExpense, editExpense, getFx } from "../lib/api"
+import { CATEGORIES, type CategoryId } from "../lib/categories"
 import { todayISODate } from "../lib/date"
 import { convertMinor, formatMoney, minorToInput, parseMajorToMinor } from "../lib/money"
 import type { Expense, ExpenseBody, Group, Member } from "../lib/types"
@@ -43,6 +44,9 @@ export function ExpenseForm({
   const editing = expense !== undefined
   const [payerId, setPayerId] = useState(expense?.payerId ?? defaultPayerId ?? members[0]?.id ?? "")
   const [description, setDescription] = useState(expense?.description ?? "")
+  const [category, setCategory] = useState<CategoryId>(
+    (expense?.category as CategoryId | null | undefined) ?? "other",
+  )
   const [splitKind, setSplitKind] = useState<"equal" | "exact">(expense?.split.kind ?? "equal")
   const [currency, setCurrency] = useState(expense?.currency ?? base)
   const [amount, setAmount] = useState(
@@ -116,6 +120,7 @@ export function ExpenseForm({
   const prefill = (e: Expense) => {
     setDescription(e.description)
     setCurrency(e.currency)
+    setCategory((e.category as CategoryId | null | undefined) ?? "other")
     setSplitKind(e.split.kind)
     if (e.split.kind === "equal") {
       setAmount(minorToInput(e.amountMinor, e.currency))
@@ -161,6 +166,7 @@ export function ExpenseForm({
         amountMinor: equalAmountMinor,
         currency,
         description: description.trim(),
+        category,
         split: { kind: "equal", participantIds },
       }
     } else {
@@ -179,6 +185,7 @@ export function ExpenseForm({
         amountMinor: exactTotalMinor,
         currency,
         description: description.trim(),
+        category,
         split: { kind: "exact", shares },
       }
     }
@@ -253,6 +260,30 @@ export function ExpenseForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
+      <fieldset className="space-y-2.5">
+        <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          Category
+        </legend>
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Category">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={category === c.id}
+              onClick={() => setCategory(c.id)}
+              className={`rounded-full border px-2.5 py-1 text-sm transition-colors ${
+                category === c.id
+                  ? "border-primary bg-primary/10 font-semibold text-foreground"
+                  : "border-input text-muted-foreground"
+              }`}
+            >
+              {c.emoji} {c.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
       <fieldset className="space-y-2.5">
         <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Split

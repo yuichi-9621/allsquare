@@ -10,6 +10,7 @@ import { MemberPicker } from "../components/MemberPicker"
 import { MemberTotals } from "../components/MemberTotals"
 import { SettleUp } from "../components/SettleUp"
 import { ShareSummary } from "../components/ShareSummary"
+import { SpendingBreakdown } from "../components/SpendingBreakdown"
 import { TripMenu } from "../components/TripMenu"
 import { useGroup } from "../hooks/useGroup"
 import { useSettlement } from "../hooks/useSettlement"
@@ -88,6 +89,7 @@ export function GroupPage() {
       if (!state) return
       const nameOf = new Map(state.members.map((m) => [m.id, m.name]))
       const created = await addExpense(slug, {
+        kind: "repayment",
         payerId: t.from,
         amountMinor: t.amountMinor,
         currency: state.group.baseCurrency,
@@ -248,6 +250,11 @@ export function GroupPage() {
             expenses={expenses}
             members={members}
             balances={settlement?.balances ?? []}
+            baseCurrency={group.baseCurrency}
+          />
+          <SpendingBreakdown
+            expenses={expenses}
+            members={members}
             baseCurrency={group.baseCurrency}
           />
           <SettleUp

@@ -19,6 +19,8 @@ export type SplitExact = {
 }
 export type Split = SplitEqual | SplitExact
 
+export type ExpenseKind = "expense" | "repayment"
+
 export type Expense = {
   id: string
   payerId: string
@@ -27,6 +29,8 @@ export type Expense = {
   fxRateToBase: number
   fxRateDate: string
   description: string
+  kind?: ExpenseKind
+  category?: string | null
   split: Split
   createdAt: string
 }
@@ -45,6 +49,8 @@ export type CreateGroupBody = {
 }
 
 export type ExpenseBody = {
+  kind?: ExpenseKind
+  category?: string | null
   payerId: string
   amountMinor: number
   currency: string

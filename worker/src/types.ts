@@ -20,6 +20,8 @@ export type SplitExact = {
   shares: { memberId: string; amountMinor: number }[]
 }
 
+export type ExpenseKind = "expense" | "repayment"
+
 export type Expense = {
   id: string
   payerId: string
@@ -28,6 +30,8 @@ export type Expense = {
   fxRateToBase: number
   fxRateDate: string
   description: string
+  kind: ExpenseKind
+  category: string | null
   split: SplitEqual | SplitExact
   createdAt: string
 }

@@ -98,6 +98,9 @@ expenses.post("/:slug/expenses", async (c) => {
     fxRateToBase: frozen.fxRateToBase,
     fxRateDate: frozen.fxRateDate,
     description: body.description,
+    kind: body.kind,
+    // Repayments are bookkeeping, never trip spending.
+    category: body.kind === "repayment" ? null : (body.category ?? null),
     splitType: prepared.splitType,
     shareRows: prepared.shareRows,
   }
@@ -133,6 +136,8 @@ expenses.patch("/:slug/expenses/:id", async (c) => {
     fxRateToBase: frozen.fxRateToBase,
     fxRateDate: frozen.fxRateDate,
     description: body.description,
+    kind: body.kind,
+    category: body.kind === "repayment" ? null : (body.category ?? null),
     splitType: prepared.splitType,
     shareRows: prepared.shareRows,
   }

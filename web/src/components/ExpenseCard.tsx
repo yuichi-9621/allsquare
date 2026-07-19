@@ -1,4 +1,5 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
+import { categoryOf } from "../lib/categories"
 import { convertMinor, splitEqualMinor } from "../lib/money"
 import type { Expense, Member } from "../lib/types"
 import { MemberAvatar } from "./MemberAvatar"
@@ -37,7 +38,14 @@ export function ExpenseCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{expense.description}</CardTitle>
+        <CardTitle>
+          {expense.kind === "repayment" ? null : (
+            <span aria-hidden className="mr-1.5">
+              {categoryOf(expense.category)?.emoji}
+            </span>
+          )}
+          {expense.description}
+        </CardTitle>
         <MoneyAmount
           amountMinor={expense.amountMinor}
           currency={expense.currency}

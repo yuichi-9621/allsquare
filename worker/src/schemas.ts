@@ -41,7 +41,20 @@ const splitExactSchema = z.object({
     .min(1),
 })
 
+export const CATEGORY_IDS = [
+  "food",
+  "drinks",
+  "transport",
+  "lodging",
+  "activities",
+  "groceries",
+  "shopping",
+  "other",
+] as const
+
 export const expenseBodySchema = z.object({
+  kind: z.enum(["expense", "repayment"]).default("expense"),
+  category: z.enum(CATEGORY_IDS).nullish(),
   payerId: z.string().min(1),
   amountMinor: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
   currency,

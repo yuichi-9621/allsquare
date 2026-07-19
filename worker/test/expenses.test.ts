@@ -295,3 +295,62 @@ test("duplicate member in an exact split is rejected 400 even when the sum match
   })
   expect(res.status).toBe(400)
 })
+
+test("category and kind round-trip; repayments are forced to null category", async () => {
+  const g = await makeGroup()
+  const [a, b] = g.members
+  const res = await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      payerId: a.id,
+      amountMinor: 3000,
+      currency: "USD",
+      description: "Ramen",
+      category: "food",
+      split: { kind: "equal", participantIds: [a.id, b.id] },
+    }),
+  })
+  expect(res.status).toBe(201)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const created = (await res.json()) as any
+  expect(created.category).toBe("food")
+  expect(created.kind).toBe("expense")
+
+  const rep = await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      payerId: b.id,
+      amountMinor: 1500,
+      currency: "USD",
+      description: "B paid A",
+      kind: "repayment",
+      category: "food",
+      split: { kind: "exact", shares: [{ memberId: a.id, amountMinor: 1500 }] },
+    }),
+  })
+  expect(rep.status).toBe(201)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const repayment = (await rep.json()) as any
+  expect(repayment.kind).toBe("repayment")
+  expect(repayment.category).toBeNull()
+})
+
+test("an invalid category is 400", async () => {
+  const g = await makeGroup()
+  const [a] = g.members
+  const res = await SELF.fetch(`https://x/api/groups/${g.group.slug}/expenses`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      payerId: a.id,
+      amountMinor: 3000,
+      currency: "USD",
+      description: "X",
+      category: "yachts",
+      split: { kind: "equal", participantIds: [a.id] },
+    }),
+  })
+  expect(res.status).toBe(400)
+})

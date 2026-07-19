@@ -60,3 +60,30 @@ test("tripSummary totals in base at frozen rates and skips repayments", () => {
   expect(s.memberCount).toBe(2)
   expect(s.currencyCount).toBe(2)
 })
+
+test("kind flag is authoritative over the legacy heuristic", () => {
+  // flagged repayment with a localized (non-English) description
+  const flagged = expense({
+    id: "j1",
+    payerId: "m2",
+    kind: "repayment",
+    amountMinor: 1500,
+    description: "ボブがアリスに支払い",
+    split: { kind: "exact", shares: [{ memberId: "m1", amountMinor: 1500 }] },
+  })
+  expect(isRepayment(flagged, members)).toBe(true)
+
+  // explicitly kind=expense: never a repayment even in the legacy shape
+  const marked = expense({
+    id: "j2",
+    payerId: "m2",
+    kind: "expense",
+    amountMinor: 1500,
+    description: "Bob paid Alice",
+    split: { kind: "exact", shares: [{ memberId: "m1", amountMinor: 1500 }] },
+  })
+  expect(isRepayment(marked, members)).toBe(false)
+
+  // legacy row without kind: heuristic still applies (regression)
+  expect(isRepayment(repayment, members)).toBe(true)
+})

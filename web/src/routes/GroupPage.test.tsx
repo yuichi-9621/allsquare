@@ -231,6 +231,7 @@ test("Mark paid records the repayment as an exact expense and flips to All squar
   // The repayment is the debtor covering the creditor's full amount, in base.
   await waitFor(() =>
     expect(posted).toEqual({
+      kind: "repayment",
       payerId: "m2",
       amountMinor: 2500,
       currency: "USD",

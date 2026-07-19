@@ -5,6 +5,10 @@ import type { Expense, Member } from "./types"
 // for the full amount, to someone other than the payer, described exactly
 // "<payer> paid <recipient>". Real expenses ("Ben's ticket") don't match.
 export function isRepayment(expense: Expense, members: Member[]): boolean {
+  // Authoritative flag (rows created after the kind migration).
+  if (expense.kind === "repayment") return true
+  if (expense.kind === "expense") return false
+  // Legacy rows (no kind): fall back to the shape heuristic.
   if (expense.split.kind !== "exact") return false
   const shares = expense.split.shares
   if (shares.length !== 1) return false
