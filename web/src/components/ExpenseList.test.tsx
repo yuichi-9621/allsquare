@@ -26,7 +26,9 @@ const expenses: Expense[] = [
 test("shows the original amount as truth and the base as derived", () => {
   render(<ExpenseList expenses={expenses} members={members} baseCurrency="USD" />)
   screen.getByText("Ramen")
-  screen.getByText((_, el) => el?.tagName === "P" && el.textContent?.replace(/\s+/g, " ").trim() === "Alice paid")
+  screen.getByText(
+    (_, el) => el?.tagName === "P" && el.textContent?.replace(/\s+/g, " ").trim() === "Alice paid",
+  )
   // 5000 JPY * 0.0066 = 3300 cents = $33.00
   screen.getByText("¥5,000 · ≈ $33.00")
 })

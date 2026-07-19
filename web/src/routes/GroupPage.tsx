@@ -7,6 +7,7 @@ import { ExpenseForm } from "../components/ExpenseForm"
 import { ExpenseList } from "../components/ExpenseList"
 import { InstallHint } from "../components/InstallHint"
 import { MemberPicker } from "../components/MemberPicker"
+import { MemberTotals } from "../components/MemberTotals"
 import { SettleUp } from "../components/SettleUp"
 import { TripMenu } from "../components/TripMenu"
 import { useGroup } from "../hooks/useGroup"
@@ -204,6 +205,12 @@ export function GroupPage() {
           <BalanceList
             balances={settlement?.balances ?? []}
             members={members}
+            baseCurrency={group.baseCurrency}
+          />
+          <MemberTotals
+            expenses={expenses}
+            members={members}
+            balances={settlement?.balances ?? []}
             baseCurrency={group.baseCurrency}
           />
           <SettleUp
