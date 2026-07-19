@@ -8,13 +8,13 @@ import { Dashboard } from "./Dashboard"
 
 beforeEach(() => localStorage.clear())
 
-test("with no saved trips it falls through to the create form", () => {
+test("with no saved trips it shows the landing pitch", () => {
   render(
     <MemoryRouter>
       <Dashboard />
     </MemoryRouter>,
   )
-  screen.getByRole("button", { name: "Create group" })
+  screen.getByRole("heading", { name: /End up all square/ })
 })
 
 test("lists saved trips with a create-group call to action", async () => {

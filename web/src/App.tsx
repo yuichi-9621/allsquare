@@ -2,6 +2,7 @@ import { Link, Route, Routes } from "react-router-dom"
 import { CreateGroup } from "./routes/CreateGroup"
 import { Dashboard } from "./routes/Dashboard"
 import { GroupPage } from "./routes/GroupPage"
+import { Landing } from "./routes/Landing"
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
       </header>
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/about" element={<Landing />} />
         <Route path="/new" element={<CreateGroup />} />
         <Route path="/g/:slug" element={<GroupPage />} />
       </Routes>

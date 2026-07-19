@@ -3,14 +3,14 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { TripCard } from "../components/TripCard"
 import { forgetTrip, getTrips } from "../lib/recentTrips"
-import { CreateGroup } from "./CreateGroup"
+import { Landing } from "./Landing"
 
 export function Dashboard() {
   const [trips, setTrips] = useState(getTrips)
 
-  // A device with no trips yet lands straight on the create form — first run
-  // is unchanged, and there's no empty dashboard to explain.
-  if (trips.length === 0) return <CreateGroup />
+  // Smart root: a device with no trips yet gets the pitch; returning users
+  // go straight to their trips. The landing stays reachable at /about.
+  if (trips.length === 0) return <Landing />
 
   const forget = (slug: string) => {
     forgetTrip(slug)
@@ -35,6 +35,12 @@ export function Dashboard() {
       <Button asChild variant="outline" className="w-full">
         <Link to="/new">Start a group</Link>
       </Button>
+      <Link
+        to="/about"
+        className="self-center font-mono text-[0.62rem] uppercase tracking-wider text-muted-foreground no-underline hover:underline"
+      >
+        What is Allsquare?
+      </Link>
     </main>
   )
 }
