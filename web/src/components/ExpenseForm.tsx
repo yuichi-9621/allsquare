@@ -29,6 +29,7 @@ export function ExpenseForm({
   onAdded,
   expense,
   onCancel,
+  recent,
 }: {
   group: Group
   members: Member[]
@@ -36,6 +37,7 @@ export function ExpenseForm({
   onAdded: () => void
   expense?: Expense | undefined
   onCancel?: (() => void) | undefined
+  recent?: Expense[] | undefined
 }) {
   const base = group.baseCurrency
   const editing = expense !== undefined
@@ -108,6 +110,24 @@ export function ExpenseForm({
       alive = false
     }
   }, [currency, base, totalForPreview, frozenRate])
+
+  // Quick re-add: copy a recent expense's fields (not the payer — whoever is
+  // adding now probably paid this time).
+  const prefill = (e: Expense) => {
+    setDescription(e.description)
+    setCurrency(e.currency)
+    setSplitKind(e.split.kind)
+    if (e.split.kind === "equal") {
+      setAmount(minorToInput(e.amountMinor, e.currency))
+      setParticipants(new Set(e.split.participantIds))
+    } else {
+      setExact(
+        Object.fromEntries(
+          e.split.shares.map((s) => [s.memberId, minorToInput(s.amountMinor, e.currency)]),
+        ),
+      )
+    }
+  }
 
   const toggleParticipant = (id: string) =>
     setParticipants((prev) => {
@@ -190,6 +210,26 @@ export function ExpenseForm({
       className="flex flex-col gap-4"
     >
       <h2 className="text-lg font-semibold">{editing ? "Edit expense" : "Add an expense"}</h2>
+      {!editing && recent && recent.length > 0 ? (
+        <div className="flex flex-col gap-1.5">
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            Add again
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {recent.map((e) => (
+              <Button
+                key={e.id}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => prefill(e)}
+              >
+                {e.description} · {formatMoney(e.amountMinor, e.currency)}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="payer-trigger">Who paid?</Label>
         <Select value={payerId} onValueChange={setPayerId}>

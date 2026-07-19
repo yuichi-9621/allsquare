@@ -249,3 +249,37 @@ test("edit mode: prefills an exact split in base amounts", () => {
   expect(screen.getByRole("textbox", { name: "Exact amount for Alice" })).toHaveValue("20.00")
   expect(screen.getByRole("textbox", { name: "Exact amount for Bob" })).toHaveValue("10.00")
 })
+
+test("Add again chip prefills description, amount, currency, and participants", async () => {
+  const user = userEvent.setup({ pointerEventsCheck: 0 })
+  const recent: Expense[] = [
+    {
+      id: "r1",
+      payerId: "m2",
+      amountMinor: 1250,
+      currency: "EUR",
+      fxRateToBase: 1.1,
+      fxRateDate: "2026-07-18",
+      description: "Coffee",
+      split: { kind: "equal", participantIds: ["m1"] },
+      createdAt: "2026-07-18T00:00:00Z",
+    },
+  ]
+  render(
+    <ExpenseForm
+      group={group}
+      members={members}
+      defaultPayerId="m1"
+      onAdded={vi.fn()}
+      recent={recent}
+    />,
+  )
+  await user.click(screen.getByRole("button", { name: "Coffee · €12.50" }))
+
+  expect(screen.getByRole("textbox", { name: "Description" })).toHaveValue("Coffee")
+  expect(screen.getByRole("textbox", { name: "Amount" })).toHaveValue("12.50")
+  // currency followed the recent expense
+  expect(screen.getByRole("combobox", { name: "Currency" })).toHaveTextContent("EUR")
+  // payer did NOT follow (whoever adds now probably paid this time)
+  expect(screen.getByRole("combobox", { name: "Payer" })).toHaveTextContent("Alice")
+})

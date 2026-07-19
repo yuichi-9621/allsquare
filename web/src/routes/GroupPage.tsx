@@ -17,6 +17,7 @@ import { getActiveMemberId, setActiveMemberId } from "../lib/activeMember"
 import { addExpense, deleteExpense } from "../lib/api"
 import { usePageMeta } from "../lib/pageMeta"
 import { recordTrip } from "../lib/recentTrips"
+import { isRepayment } from "../lib/shareCard"
 import type { Member, Rounding, Transfer } from "../lib/types"
 
 export function GroupPage() {
@@ -138,6 +139,17 @@ export function GroupPage() {
   const editingExpense = editingId ? expenses.find((e) => e.id === editingId) : undefined
   const formOpen = adding || editingExpense !== undefined
 
+  // "Add again" chips: the last three distinct real expenses, newest first
+  // (repayments are bookkeeping, not things you'd re-add).
+  const recent: typeof expenses = []
+  const seenDescriptions = new Set<string>()
+  for (let i = expenses.length - 1; i >= 0 && recent.length < 3; i--) {
+    const e = expenses[i]
+    if (!e || isRepayment(e, members) || seenDescriptions.has(e.description)) continue
+    seenDescriptions.add(e.description)
+    recent.push(e)
+  }
+
   return (
     <main className="flex w-full flex-col gap-6">
       <div className="flex items-center justify-between gap-3">
@@ -196,6 +208,7 @@ export function GroupPage() {
                     }}
                     expense={editingExpense}
                     onCancel={closeForm}
+                    recent={recent}
                   />
                 </CardContent>
               </Card>
