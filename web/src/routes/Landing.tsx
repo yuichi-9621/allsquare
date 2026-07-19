@@ -1,5 +1,6 @@
 import { Button, Card, CardContent, Stamp } from "@allsquare/ui"
 import { Link } from "react-router-dom"
+import { DEFAULT_META, usePageMeta } from "../lib/pageMeta"
 
 // Use cases rendered as passport stamps — the identity's signature, doing the
 // walica "こんなシーンで" job. Inks alternate between the two decorative tones
@@ -46,7 +47,29 @@ const STEPS = [
   },
 ]
 
+// Kept word-for-word in sync with the FAQPage JSON-LD in index.html; Google
+// requires the schema answers to match visible page content.
+const FAQS = [
+  {
+    q: "Do I need an account to use Allsquare?",
+    a: "No. Start a group, share the link, and everyone is in. Nobody signs up, ever.",
+  },
+  {
+    q: "Is Allsquare really free?",
+    a: "Yes. Unlimited expenses, unlimited members, and every currency, at no cost.",
+  },
+  {
+    q: "How does multi-currency splitting work?",
+    a: "Add each expense in the currency you paid in. Allsquare locks that day's exchange rate, and everyone settles in the group's home currency.",
+  },
+  {
+    q: "How is Allsquare different from Splitwise?",
+    a: "There are no accounts, nothing to install, and no paywall. Unlimited expenses and multi-currency support are free.",
+  },
+]
+
 export function Landing() {
+  usePageMeta(DEFAULT_META)
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-10 pb-6">
       {/* Hero — the thesis, on the dark cover surface. */}
@@ -107,6 +130,21 @@ export function Landing() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* FAQ — visible twin of the FAQPage structured data. */}
+      <section aria-label="Frequently asked questions" className="flex flex-col gap-4">
+        <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          Questions, answered
+        </h2>
+        <dl className="flex flex-col gap-5">
+          {FAQS.map((f) => (
+            <div key={f.q} className="flex flex-col gap-1">
+              <dt className="font-semibold text-foreground">{f.q}</dt>
+              <dd className="text-sm text-muted-foreground">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       {/* Closing — the promise, stamped. */}

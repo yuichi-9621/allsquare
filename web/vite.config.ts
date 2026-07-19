@@ -20,8 +20,9 @@ export default defineConfig({
         name: "Allsquare",
         short_name: "Allsquare",
         description: "Split anything on a trip. End up all square.",
-        theme_color: "#06150e",
-        background_color: "#06150e",
+        // Black Forest, the Stamp theme's cover color.
+        theme_color: "#283618",
+        background_color: "#283618",
         display: "standalone",
         start_url: "/",
         icons: [

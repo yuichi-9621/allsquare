@@ -13,6 +13,7 @@ import { useGroup } from "../hooks/useGroup"
 import { useSettlement } from "../hooks/useSettlement"
 import { getActiveMemberId, setActiveMemberId } from "../lib/activeMember"
 import { addExpense, deleteExpense } from "../lib/api"
+import { usePageMeta } from "../lib/pageMeta"
 import { recordTrip } from "../lib/recentTrips"
 import type { Member, Rounding, Transfer } from "../lib/types"
 
@@ -27,6 +28,9 @@ export function GroupPage() {
   const formRef = useRef<HTMLDivElement>(null)
   // Settle-up shows EXACT cents by default; the trip menu can opt into rounding.
   const [rounding, setRounding] = useState<Rounding | undefined>(undefined)
+
+  // Trip pages are private invitations (secret slug): never indexed.
+  usePageMeta({ title: `${state?.group.title ?? "Trip"} | Allsquare`, noindex: true })
 
   // Content key (not count) so a same-count edit still refetches balances.
   const revision = JSON.stringify(state?.expenses ?? [])

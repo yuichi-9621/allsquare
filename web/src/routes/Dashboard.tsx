@@ -2,11 +2,15 @@ import { Button } from "@allsquare/ui"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { TripCard } from "../components/TripCard"
+import { DEFAULT_META, usePageMeta } from "../lib/pageMeta"
 import { forgetTrip, getTrips } from "../lib/recentTrips"
 import { Landing } from "./Landing"
 
 export function Dashboard() {
   const [trips, setTrips] = useState(getTrips)
+  // When empty this renders <Landing/>, whose own meta must win; effects run
+  // child-first, so mirror the landing meta here instead of overwriting it.
+  usePageMeta(trips.length === 0 ? DEFAULT_META : { title: "Your trips | Allsquare" })
 
   // Smart root: a device with no trips yet gets the pitch; returning users
   // go straight to their trips. The landing stays reachable at /about.

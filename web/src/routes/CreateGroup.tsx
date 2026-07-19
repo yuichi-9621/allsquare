@@ -2,11 +2,13 @@ import { Button, Card, CardContent, Input, Label } from "@allsquare/ui"
 import { type FormEvent, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createGroup } from "../lib/api"
+import { usePageMeta } from "../lib/pageMeta"
 import { recordTrip } from "../lib/recentTrips"
 
 const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "THB", "SGD"]
 
 export function CreateGroup() {
+  usePageMeta({ title: "Start a group | Allsquare" })
   const navigate = useNavigate()
   const [title, setTitle] = useState("")
   const [baseCurrency, setBaseCurrency] = useState("USD")

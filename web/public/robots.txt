@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+# Group links are private invitations; keep them out of search results.
+Disallow: /g/
+
+Sitemap: https://all-sqr.com/sitemap.xml
