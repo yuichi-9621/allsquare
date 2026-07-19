@@ -12,7 +12,7 @@ export type Group = {
   createdAt: string
 }
 
-export type Member = { id: string; name: string; sortOrder: number }
+export type Member = { id: string; name: string; sortOrder: number; paymentHandle: string | null }
 
 export type SplitEqual = { kind: "equal"; participantIds: string[] }
 export type SplitExact = {

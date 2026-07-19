@@ -51,3 +51,61 @@ test("shows an error when recording the payment fails", async () => {
     expect(screen.getByRole("button", { name: "Mark Bob paid Alice" })).toBeEnabled(),
   )
 })
+
+test("payee with a Venmo handle gets a Pay link with amount and note", () => {
+  const withHandle: Member[] = [
+    { id: "m1", name: "Alice", sortOrder: 0, paymentHandle: "@alice-pays" },
+    { id: "m2", name: "Bob", sortOrder: 1 },
+  ]
+  const transfer: Transfer = { from: "m2", to: "m1", amountMinor: 4200 }
+  render(
+    <SettleRow
+      transfer={transfer}
+      members={withHandle}
+      baseCurrency="USD"
+      note="Kyoto"
+      onMarkPaid={vi.fn()}
+    />,
+  )
+  const link = screen.getByRole("link", { name: "Pay Alice" })
+  expect(link).toHaveAttribute(
+    "href",
+    "https://venmo.com/u/alice-pays?txn=pay&amount=42.00&note=Kyoto",
+  )
+})
+
+test("payee with plain-text payment info gets a copy button", async () => {
+  const user = userEvent.setup()
+  const writeText = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue()
+  const withHandle: Member[] = [
+    { id: "m1", name: "Alice", sortOrder: 0, paymentHandle: "Apple Pay: 415-555-0100" },
+    { id: "m2", name: "Bob", sortOrder: 1 },
+  ]
+  const transfer: Transfer = { from: "m2", to: "m1", amountMinor: 4200 }
+  render(
+    <SettleRow
+      transfer={transfer}
+      members={withHandle}
+      baseCurrency="USD"
+      note="Kyoto"
+      onMarkPaid={vi.fn()}
+    />,
+  )
+  await user.click(screen.getByRole("button", { name: "Copy Alice's payment info" }))
+  expect(writeText).toHaveBeenCalledWith("Apple Pay: 415-555-0100")
+  await screen.findByText("Copied!")
+})
+
+test("no Pay affordance when the payee has no handle", () => {
+  const transfer: Transfer = { from: "m2", to: "m1", amountMinor: 4200 }
+  render(
+    <SettleRow
+      transfer={transfer}
+      members={members}
+      baseCurrency="USD"
+      note="Kyoto"
+      onMarkPaid={vi.fn()}
+    />,
+  )
+  expect(screen.queryByRole("link", { name: "Pay Alice" })).toBeNull()
+})

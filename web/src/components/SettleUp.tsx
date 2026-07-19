@@ -8,11 +8,13 @@ export function SettleUp({
   transfers,
   members,
   baseCurrency,
+  note,
   onMarkPaid,
 }: {
   transfers: Transfer[] | null
   members: Member[]
   baseCurrency: string
+  note?: string | undefined
   onMarkPaid: (transfer: Transfer) => Promise<void>
 }) {
   return (
@@ -33,6 +35,7 @@ export function SettleUp({
               transfer={t}
               members={members}
               baseCurrency={baseCurrency}
+              note={note}
               onMarkPaid={onMarkPaid}
             />
           ))}

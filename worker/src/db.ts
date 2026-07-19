@@ -9,7 +9,7 @@ export type GroupRow = {
   rounding: number
   created_at: string
 }
-type MemberRow = { id: string; name: string; sort_order: number }
+type MemberRow = { id: string; name: string; sort_order: number; payment_handle: string | null }
 type ExpenseRow = {
   id: string
   payer_member_id: string
@@ -27,7 +27,12 @@ const EXPENSE_COLS =
   "id, payer_member_id, amount_minor, currency, fx_rate_to_base, fx_rate_date, description, split_type, created_at"
 
 function toMember(r: MemberRow): Member {
-  return { id: r.id, name: r.name, sortOrder: r.sort_order }
+  return {
+    id: r.id,
+    name: r.name,
+    sortOrder: r.sort_order,
+    paymentHandle: r.payment_handle ?? null,
+  }
 }
 
 async function getShares(db: D1Database, expenseId: string): Promise<ShareRow[]> {
@@ -67,7 +72,9 @@ async function toExpense(db: D1Database, row: ExpenseRow): Promise<Expense> {
 
 async function getMembers(db: D1Database, groupId: string): Promise<Member[]> {
   const { results } = await db
-    .prepare("SELECT id, name, sort_order FROM members WHERE group_id = ? ORDER BY sort_order")
+    .prepare(
+      "SELECT id, name, sort_order, payment_handle FROM members WHERE group_id = ? ORDER BY sort_order",
+    )
     .bind(groupId)
     .all<MemberRow>()
   return results.map(toMember)
@@ -111,7 +118,7 @@ export async function createGroup(db: D1Database, input: CreateGroupInput): Prom
         .prepare("INSERT INTO members (id, group_id, name, sort_order) VALUES (?, ?, ?, ?)")
         .bind(id, groupId, name, i),
     )
-    return { id, name, sortOrder: i }
+    return { id, name, sortOrder: i, paymentHandle: null }
   })
   await db.batch(statements)
 
@@ -172,7 +179,25 @@ export async function addMember(db: D1Database, groupId: string, name: string): 
     .bind(id, groupId, name, groupId)
     .first<{ sort_order: number }>()
   if (!row) throw new Error("addMember insert returned no row")
-  return { id, name, sortOrder: row.sort_order }
+  return { id, name, sortOrder: row.sort_order, paymentHandle: null }
+}
+
+// Sets (or clears) a member's payment destination; null when the member
+// doesn't belong to the group.
+export async function setMemberPaymentHandle(
+  db: D1Database,
+  groupId: string,
+  memberId: string,
+  paymentHandle: string | null,
+): Promise<Member | null> {
+  const row = await db
+    .prepare(
+      "UPDATE members SET payment_handle = ? WHERE id = ? AND group_id = ? " +
+        "RETURNING id, name, sort_order, payment_handle",
+    )
+    .bind(paymentHandle, memberId, groupId)
+    .first<MemberRow>()
+  return row ? toMember(row) : null
 }
 
 export async function memberIds(db: D1Database, groupId: string): Promise<Set<string>> {

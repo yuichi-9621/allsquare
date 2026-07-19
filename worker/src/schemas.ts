@@ -20,6 +20,10 @@ export const addMemberSchema = z.object({ name: z.string().min(1) })
 
 export const groupPatchSchema = z.object({ title: z.string().min(1) })
 
+// Free text on purpose: a Venmo handle, PayPal.Me link, $cashtag, any URL,
+// or plain instructions. Empty string clears it.
+export const memberPatchSchema = z.object({ paymentHandle: z.string().trim().max(200) })
+
 const splitEqualSchema = z.object({
   kind: z.literal("equal"),
   participantIds: z.array(z.string().min(1)).min(1),

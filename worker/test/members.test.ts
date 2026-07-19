@@ -49,3 +49,41 @@ test("invalid member body is 400", async () => {
   })
   expect(res.status).toBe(400)
 })
+
+test("PATCH member sets, round-trips, and clears the payment handle", async () => {
+  const g = await makeGroup()
+  const memberId = g.members[0].id
+  const res = await SELF.fetch(`https://x/api/groups/${g.group.slug}/members/${memberId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ paymentHandle: "@alice-venmo" }),
+  })
+  expect(res.status).toBe(200)
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const updated = (await res.json()) as any
+  expect(updated.paymentHandle).toBe("@alice-venmo")
+
+  // the handle comes back in the group state
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  const state = (await (await SELF.fetch(`https://x/api/groups/${g.group.slug}`)).json()) as any
+  expect(state.members[0].paymentHandle).toBe("@alice-venmo")
+
+  // empty string clears it back to null
+  const cleared = await SELF.fetch(`https://x/api/groups/${g.group.slug}/members/${memberId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ paymentHandle: "" }),
+  })
+  // biome-ignore lint/suspicious/noExplicitAny: response body shape asserted via expect(), not types
+  expect(((await cleared.json()) as any).paymentHandle).toBeNull()
+})
+
+test("PATCH payment handle for an unknown member is 404", async () => {
+  const g = await makeGroup()
+  const res = await SELF.fetch(`https://x/api/groups/${g.group.slug}/members/nope`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ paymentHandle: "@x" }),
+  })
+  expect(res.status).toBe(404)
+})

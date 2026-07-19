@@ -161,6 +161,7 @@ export function GroupPage() {
           title={group.title}
           shareUrl={shareUrl}
           rounding={rounding}
+          activeMember={members.find((m) => m.id === activeId) ?? null}
           onRounding={setRounding}
           onChanged={refresh}
         />
@@ -253,6 +254,7 @@ export function GroupPage() {
             transfers={settlement?.transfers ?? null}
             members={members}
             baseCurrency={group.baseCurrency}
+            note={group.title}
             onMarkPaid={onMarkPaid}
           />
           {settlement?.transfers?.length === 0 && expenses.length > 0 ? (

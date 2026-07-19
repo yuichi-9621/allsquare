@@ -49,6 +49,17 @@ export function getGroup(slug: string): Promise<GroupState> {
   return request<GroupState>(`/api/groups/${encodeURIComponent(slug)}`)
 }
 
+export function setPaymentHandle(
+  slug: string,
+  memberId: string,
+  paymentHandle: string,
+): Promise<Member> {
+  return request<Member>(
+    `/api/groups/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}`,
+    { method: "PATCH", body: JSON.stringify({ paymentHandle }) },
+  )
+}
+
 export function renameGroup(slug: string, title: string): Promise<GroupState> {
   return request<GroupState>(`/api/groups/${encodeURIComponent(slug)}`, {
     method: "PATCH",

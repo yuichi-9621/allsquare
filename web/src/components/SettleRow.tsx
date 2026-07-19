@@ -1,27 +1,35 @@
 import { Button } from "@allsquare/ui"
 import { useState } from "react"
+import { paymentTarget } from "../lib/paymentLink"
 import type { Member, Transfer } from "../lib/types"
 import { MemberAvatar } from "./MemberAvatar"
 import { MoneyAmount } from "./MoneyAmount"
 
-// One "who pays who" line with a Mark paid action. Recording semantics live in
-// the parent (GroupPage) — this row only reports the tap and shows progress.
+// One "who pays who" line with Pay + Mark paid actions. Recording semantics
+// live in the parent (GroupPage); Pay opens the payee's saved payment
+// destination (or copies it when it isn't a link).
 export function SettleRow({
   transfer,
   members,
   baseCurrency,
+  note = "Allsquare",
   onMarkPaid,
 }: {
   transfer: Transfer
   members: Member[]
   baseCurrency: string
+  note?: string | undefined
   onMarkPaid: (transfer: Transfer) => Promise<void>
 }) {
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [copied, setCopied] = useState(false)
   const nameOf = new Map(members.map((m) => [m.id, m.name]))
   const from = nameOf.get(transfer.from) ?? "?"
   const to = nameOf.get(transfer.to) ?? "?"
+
+  const handle = members.find((m) => m.id === transfer.to)?.paymentHandle
+  const target = handle ? paymentTarget(handle, transfer.amountMinor, baseCurrency, note) : null
 
   const markPaid = async () => {
     setBusy(true)
@@ -35,6 +43,16 @@ export function SettleRow({
     }
   }
 
+  const copyTarget = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-3">
@@ -45,6 +63,24 @@ export function SettleRow({
         </span>
         <div className="flex shrink-0 items-center gap-2.5">
           <MoneyAmount amountMinor={transfer.amountMinor} currency={baseCurrency} />
+          {target?.kind === "link" ? (
+            <Button asChild variant="secondary" size="sm">
+              <a href={target.href} target="_blank" rel="noreferrer" aria-label={`Pay ${to}`}>
+                Pay
+              </a>
+            </Button>
+          ) : null}
+          {target?.kind === "copy" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              aria-label={`Copy ${to}'s payment info`}
+              onClick={() => copyTarget(target.text)}
+            >
+              {copied ? "Copied!" : "Pay info"}
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"

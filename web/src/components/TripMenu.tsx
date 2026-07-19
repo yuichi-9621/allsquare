@@ -14,8 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "@allsquare/ui"
 import { useState } from "react"
-import type { Rounding } from "../lib/types"
+import type { Member, Rounding } from "../lib/types"
 import { AddMember } from "./AddMember"
+import { PaymentInfo } from "./PaymentInfo"
 import { RenameTrip } from "./RenameTrip"
 import { ShareBar } from "./ShareBar"
 
@@ -26,7 +27,7 @@ const ROUNDING_OPTIONS: { label: string; value: Rounding | "exact" }[] = [
   { label: "Nearest 100", value: 100 },
 ]
 
-type MenuDialog = "rename" | "share" | "member"
+type MenuDialog = "rename" | "share" | "member" | "payment"
 
 // The trip's overflow menu: a real dropdown of actions, each opening a focused
 // dialog, so the trip screen stays add → see → settle. Rounding is a setting,
@@ -36,6 +37,7 @@ export function TripMenu({
   title,
   shareUrl,
   rounding,
+  activeMember,
   onRounding,
   onChanged,
 }: {
@@ -43,6 +45,7 @@ export function TripMenu({
   title: string
   shareUrl: string
   rounding: Rounding | undefined
+  activeMember?: Member | null | undefined
   onRounding: (r: Rounding | undefined) => void
   onChanged: () => void
 }) {
@@ -67,6 +70,11 @@ export function TripMenu({
           <DropdownMenuItem onSelect={() => setDialog("rename")}>Rename trip…</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("share")}>Share…</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("member")}>Add member…</DropdownMenuItem>
+          {activeMember ? (
+            <DropdownMenuItem onSelect={() => setDialog("payment")}>
+              Your payment info…
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Round settle-up</DropdownMenuLabel>
           <DropdownMenuRadioGroup
@@ -114,6 +122,22 @@ export function TripMenu({
           <AddMember slug={slug} onAdded={onChanged} label="Name" />
         </DialogContent>
       </Dialog>
+
+      {activeMember ? (
+        <Dialog {...dialogProps("payment")}>
+          <DialogContent aria-describedby={undefined}>
+            <DialogTitle>Your payment info</DialogTitle>
+            <PaymentInfo
+              slug={slug}
+              member={activeMember}
+              onSaved={() => {
+                onChanged()
+                close()
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </>
   )
 }
