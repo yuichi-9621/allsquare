@@ -1,4 +1,4 @@
-import { Button, Card, CardContent } from "@allsquare/ui"
+import { Button } from "@allsquare/ui"
 import { useState } from "react"
 import { QrCode } from "./QrCode"
 
@@ -14,16 +14,13 @@ export function ShareBar({ url }: { url: string }) {
     }
   }
 
+  // Bare column (no Card) so it sits flat inside the share dialog.
   return (
-    <section aria-label="Share">
-      <Card className="w-fit">
-        <CardContent className="items-center pt-3.5">
-          <Button type="button" variant="secondary" onClick={copy}>
-            {copied ? "Copied!" : "Copy link"}
-          </Button>
-          <QrCode value={url} />
-        </CardContent>
-      </Card>
+    <section aria-label="Share" className="flex flex-col items-center gap-3">
+      <Button type="button" variant="secondary" onClick={copy} className="w-full">
+        {copied ? "Copied!" : "Copy link"}
+      </Button>
+      <QrCode value={url} />
     </section>
   )
 }

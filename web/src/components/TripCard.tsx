@@ -72,17 +72,20 @@ export function TripCard({
     <li>
       <Card className="relative">
         <Link to={`/g/${trip.slug}`} className="block rounded-lg focus-visible:outline-none">
-          <CardHeader>
-            <CardTitle>{trip.title}</CardTitle>
-            <Badge variant="muted">{trip.baseCurrency}</Badge>
+          {/* pr-24 keeps the title clear of the absolutely-positioned Remove button. */}
+          <CardHeader className="pr-24">
+            <CardTitle className="min-w-0 truncate">{trip.title}</CardTitle>
           </CardHeader>
           <CardContent>
             {position ? (
               <p className={`text-sm ${POSITION_CLASS[position.tone]}`}>{position.text}</p>
             ) : null}
-            <Badge variant={STATUS_VARIANT[statusKind]} data-status={statusKind} className="w-fit">
-              {statusText}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge variant={STATUS_VARIANT[statusKind]} data-status={statusKind}>
+                {statusText}
+              </Badge>
+              <Badge variant="muted">{trip.baseCurrency}</Badge>
+            </div>
           </CardContent>
         </Link>
         <Button

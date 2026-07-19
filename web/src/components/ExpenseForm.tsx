@@ -184,9 +184,13 @@ export function ExpenseForm({
   }
 
   return (
-    <form onSubmit={onSubmit} aria-label={editing ? "Edit expense" : "Add expense"}>
-      <h2>{editing ? "Edit expense" : "Add an expense"}</h2>
-      <div>
+    <form
+      onSubmit={onSubmit}
+      aria-label={editing ? "Edit expense" : "Add expense"}
+      className="flex flex-col gap-4"
+    >
+      <h2 className="text-lg font-semibold">{editing ? "Edit expense" : "Add an expense"}</h2>
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="payer-trigger">Payer</Label>
         <Select value={payerId} onValueChange={setPayerId}>
           <SelectTrigger id="payer-trigger" aria-label="Payer">
@@ -201,7 +205,7 @@ export function ExpenseForm({
           </SelectContent>
         </Select>
       </div>
-      <div>
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="description">Description</Label>
         <Input
           id="description"
@@ -209,24 +213,31 @@ export function ExpenseForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <fieldset>
-        <legend>Split</legend>
+      <fieldset className="space-y-2.5">
+        <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          Split
+        </legend>
         <RadioGroup
           value={splitKind}
           onValueChange={(value) => setSplitKind(value as "equal" | "exact")}
+          className="gap-2.5"
         >
-          <div>
+          <div className="flex items-center gap-2.5">
             <RadioGroupItem value="equal" id="split-equal" aria-label="Equal" />
-            <Label htmlFor="split-equal">Equal</Label>
+            <Label htmlFor="split-equal" className="text-foreground">
+              Equal
+            </Label>
           </div>
-          <div>
+          <div className="flex items-center gap-2.5">
             <RadioGroupItem value="exact" id="split-exact" aria-label="Exact" />
-            <Label htmlFor="split-exact">Exact</Label>
+            <Label htmlFor="split-exact" className="text-foreground">
+              Exact
+            </Label>
           </div>
         </RadioGroup>
       </fieldset>
 
-      <div>
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="currency-trigger">Currency</Label>
         <Select value={currency} onValueChange={setCurrency}>
           <SelectTrigger id="currency-trigger" aria-label="Currency">
@@ -244,7 +255,7 @@ export function ExpenseForm({
 
       {splitKind === "equal" ? (
         <>
-          <div>
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="amount">Amount</Label>
             <Input
               id="amount"
@@ -253,27 +264,37 @@ export function ExpenseForm({
               inputMode="decimal"
             />
           </div>
-          {preview !== null ? <p data-testid="fx-preview">≈ {formatMoney(preview, base)}</p> : null}
-          <fieldset>
-            <legend>Participants</legend>
+          {preview !== null ? (
+            <p data-testid="fx-preview" className="text-sm text-muted-foreground">
+              ≈ {formatMoney(preview, base)}
+            </p>
+          ) : null}
+          <fieldset className="space-y-2.5">
+            <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              Participants
+            </legend>
             {members.map((m) => (
-              <div key={m.id}>
+              <div key={m.id} className="flex items-center gap-2.5">
                 <Checkbox
                   id={`participant-${m.id}`}
                   aria-label={m.name}
                   checked={participants.has(m.id)}
                   onCheckedChange={() => toggleParticipant(m.id)}
                 />
-                <Label htmlFor={`participant-${m.id}`}>{m.name}</Label>
+                <Label htmlFor={`participant-${m.id}`} className="text-foreground">
+                  {m.name}
+                </Label>
               </div>
             ))}
           </fieldset>
         </>
       ) : (
-        <fieldset>
-          <legend>Exact amounts ({currency})</legend>
+        <fieldset className="space-y-2.5">
+          <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            Exact amounts ({currency})
+          </legend>
           {members.map((m) => (
-            <div key={m.id}>
+            <div key={m.id} className="flex flex-col gap-1.5">
               <Label htmlFor={`exact-${m.id}`}>{m.name}</Label>
               <Input
                 id={`exact-${m.id}`}
@@ -284,12 +305,22 @@ export function ExpenseForm({
               />
             </div>
           ))}
-          <p data-testid="exact-total">Total {formatMoney(exactTotalMinor, currency)}</p>
-          {preview !== null ? <p data-testid="fx-preview">≈ {formatMoney(preview, base)}</p> : null}
+          <p data-testid="exact-total" className="text-sm">
+            Total {formatMoney(exactTotalMinor, currency)}
+          </p>
+          {preview !== null ? (
+            <p data-testid="fx-preview" className="text-sm text-muted-foreground">
+              ≈ {formatMoney(preview, base)}
+            </p>
+          ) : null}
         </fieldset>
       )}
 
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
       <div className="flex items-stretch gap-2">
         {onCancel ? (
           <Button type="button" variant="ghost" onClick={onCancel}>

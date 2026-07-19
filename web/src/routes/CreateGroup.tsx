@@ -66,7 +66,7 @@ export function CreateGroup() {
       </div>
 
       <Card>
-        <CardContent className="gap-4 pt-3.5">
+        <CardContent className="gap-4 pt-4">
           <div className="flex flex-col gap-1">
             <Label htmlFor="trip-title">Trip title</Label>
             <Input

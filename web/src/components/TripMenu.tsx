@@ -1,14 +1,19 @@
 import {
   Button,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@allsquare/ui"
+import { useState } from "react"
 import type { Rounding } from "../lib/types"
 import { AddMember } from "./AddMember"
 import { RenameTrip } from "./RenameTrip"
@@ -21,9 +26,11 @@ const ROUNDING_OPTIONS: { label: string; value: Rounding | "exact" }[] = [
   { label: "Nearest 100", value: 100 },
 ]
 
-// The trip's overflow menu: everything secondary lives here so the trip screen
-// stays add → see → settle. A Popover disclosure — Radix manages open/close,
-// outside-click dismissal, and aria-expanded/aria-haspopup on the trigger.
+type MenuDialog = "rename" | "share" | "member"
+
+// The trip's overflow menu: a real dropdown of actions, each opening a focused
+// dialog, so the trip screen stays add → see → settle. Rounding is a setting,
+// not an action, so it lives inline in the menu as a radio group.
 export function TripMenu({
   slug,
   title,
@@ -39,49 +46,74 @@ export function TripMenu({
   onRounding: (r: Rounding | undefined) => void
   onChanged: () => void
 }) {
+  const [dialog, setDialog] = useState<MenuDialog | null>(null)
+  const close = () => setDialog(null)
+  const dialogProps = (name: MenuDialog) => ({
+    open: dialog === name,
+    onOpenChange: (open: boolean) => {
+      if (!open) close()
+    },
+  })
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="ghost" className="menu-toggle" aria-label="Trip menu">
-          ⋮
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent aria-label="Trip options">
-        <div className="menu-item">
-          <h3>Rename trip</h3>
-          <RenameTrip slug={slug} title={title} onRenamed={onChanged} />
-        </div>
-        <div className="menu-item">
-          <h3>Share</h3>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" variant="ghost" aria-label="Trip menu" className="px-3 text-xl">
+            ⋮
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent aria-label="Trip options">
+          <DropdownMenuItem onSelect={() => setDialog("rename")}>Rename trip…</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setDialog("share")}>Share…</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setDialog("member")}>Add member…</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Round settle-up</DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            value={String(rounding ?? "exact")}
+            onValueChange={(value) =>
+              onRounding(value === "exact" ? undefined : (Number(value) as Rounding))
+            }
+          >
+            {ROUNDING_OPTIONS.map((o) => (
+              <DropdownMenuRadioItem key={String(o.value)} value={String(o.value)}>
+                {o.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog {...dialogProps("rename")}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogTitle>Rename trip</DialogTitle>
+          <RenameTrip
+            slug={slug}
+            title={title}
+            onRenamed={() => {
+              onChanged()
+              close()
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog {...dialogProps("share")}>
+        <DialogContent>
+          <DialogTitle>Share this trip</DialogTitle>
+          <DialogDescription>
+            Anyone with the link can open the trip — no account needed.
+          </DialogDescription>
           <ShareBar url={shareUrl} />
-        </div>
-        <div className="menu-item">
-          <h3>Add member</h3>
-          <AddMember slug={slug} onAdded={onChanged} />
-        </div>
-        <div className="menu-item">
-          <label htmlFor="rounding-trigger">
-            Round settle-up
-            <Select
-              value={String(rounding ?? "exact")}
-              onValueChange={(value) =>
-                onRounding(value === "exact" ? undefined : (Number(value) as Rounding))
-              }
-            >
-              <SelectTrigger id="rounding-trigger" aria-label="Round settle-up">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ROUNDING_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={String(o.value)}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-        </div>
-      </PopoverContent>
-    </Popover>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog {...dialogProps("member")}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogTitle>Add member</DialogTitle>
+          <AddMember slug={slug} onAdded={onChanged} label="Name" />
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

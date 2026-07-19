@@ -109,7 +109,7 @@ export function GroupPage() {
 
       {activeId === null ? (
         <Card>
-          <CardContent className="gap-4 pt-3.5">
+          <CardContent className="gap-4 pt-4">
             <MemberPicker members={members} onPick={pick} />
             <AddMember
               slug={slug}
@@ -132,7 +132,7 @@ export function GroupPage() {
       <div ref={formRef}>
         {formOpen ? (
           <Card>
-            <CardContent className="gap-4 pt-3.5">
+            <CardContent className="gap-4 pt-4">
               <ExpenseForm
                 key={editingId ?? "new"}
                 group={group}
