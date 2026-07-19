@@ -48,7 +48,7 @@ const STEPS = [
 
 export function Landing() {
   return (
-    <main className="flex w-full flex-col gap-10 pb-6">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-10 pb-6">
       {/* Hero — the thesis, on the dark cover surface. */}
       <section className="flex flex-col gap-4 pt-2">
         <h1 className="font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
@@ -60,11 +60,11 @@ export function Landing() {
           The no-sign-up bill splitter for trips, dinners, and everything your group shares. Any
           currency, one shared link.
         </p>
-        <Button asChild size="lg" className="w-full">
+        <Button asChild size="lg" className="w-full sm:w-fit sm:px-10">
           <Link to="/new">Start a group</Link>
         </Button>
         <p className="font-mono text-[0.62rem] uppercase tracking-wider text-muted-foreground">
-          Free · no accounts · works offline
+          Free · no accounts · no cookies · works offline
         </p>
       </section>
 
@@ -94,9 +94,9 @@ export function Landing() {
         <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           How it works
         </h2>
-        <ol className="flex flex-col gap-5">
+        <ol className="flex flex-col gap-5 md:grid md:grid-cols-3 md:gap-6">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="flex gap-3.5">
+            <li key={s.title} className="flex gap-3.5 md:flex-col">
               <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-foil/60 font-mono text-sm text-foil">
                 {i + 1}
               </span>
@@ -113,9 +113,12 @@ export function Landing() {
       <section className="flex flex-col items-center gap-4 text-center">
         <Stamp state="square" className="scale-150" />
         <p className="text-muted-foreground">Every group ends the same way.</p>
-        <Button asChild size="lg" className="w-full">
+        <Button asChild size="lg" className="w-full sm:w-fit sm:px-10">
           <Link to="/new">Start a group for free</Link>
         </Button>
+        <p className="text-xs text-muted-foreground">
+          No cookies, no tracking. Your trip list stays on your device.
+        </p>
       </section>
     </main>
   )

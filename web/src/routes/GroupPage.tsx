@@ -144,62 +144,72 @@ export function GroupPage() {
         </p>
       )}
 
-      {/* Add an expense — the primary action, first. Collapsed to a button so
+      {/* Desktop splits into a working column (add + expenses) and a sticky
+          summary rail (balances + settle up); on mobile both stack in the
+          same order as before. */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
+          {/* Add an expense — the primary action, first. Collapsed to a button so
           the overview (expenses + settle-up) leads; the form opens on demand,
           or when editing an expense. One form, two modes; a fresh key per
           target re-initialises it from the expense being edited. */}
-      <div ref={formRef}>
-        {formOpen ? (
-          <Card>
-            <CardContent className="gap-4 pt-4">
-              <ExpenseForm
-                key={editingId ?? "new"}
-                group={group}
-                members={members}
-                defaultPayerId={activeId}
-                onAdded={async () => {
-                  await refresh()
-                  closeForm()
-                }}
-                expense={editingExpense}
-                onCancel={closeForm}
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <Button type="button" size="lg" className="w-full" onClick={() => setAdding(true)}>
-            Add an expense
-          </Button>
-        )}
+          <div ref={formRef}>
+            {formOpen ? (
+              <Card>
+                <CardContent className="gap-4 pt-4">
+                  <ExpenseForm
+                    key={editingId ?? "new"}
+                    group={group}
+                    members={members}
+                    defaultPayerId={activeId}
+                    onAdded={async () => {
+                      await refresh()
+                      closeForm()
+                    }}
+                    expense={editingExpense}
+                    onCancel={closeForm}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <Button type="button" size="lg" className="w-full" onClick={() => setAdding(true)}>
+                Add an expense
+              </Button>
+            )}
+          </div>
+
+          <section aria-label="Expenses" className="flex flex-col gap-3">
+            <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              Expenses
+            </h2>
+            <ExpenseList
+              expenses={expenses}
+              members={members}
+              baseCurrency={group.baseCurrency}
+              onEdit={setEditingId}
+              onDelete={onDeleteExpense}
+            />
+          </section>
+        </div>
+
+        {/* Settle up — read last on mobile, always in view on desktop. */}
+        <section
+          aria-label="Settle up section"
+          className="flex w-full flex-col gap-3 lg:sticky lg:top-6 lg:w-80 lg:shrink-0"
+        >
+          <BalanceList
+            balances={settlement?.balances ?? []}
+            members={members}
+            baseCurrency={group.baseCurrency}
+          />
+          <SettleUp
+            transfers={settlement?.transfers ?? null}
+            members={members}
+            baseCurrency={group.baseCurrency}
+            onMarkPaid={onMarkPaid}
+          />
+        </section>
       </div>
-
-      <section aria-label="Expenses" className="flex flex-col gap-3">
-        <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          Expenses
-        </h2>
-        <ExpenseList
-          expenses={expenses}
-          members={members}
-          baseCurrency={group.baseCurrency}
-          onEdit={setEditingId}
-          onDelete={onDeleteExpense}
-        />
-      </section>
-
-      {/* Settle up — read last: where everyone stands, then who pays who. */}
-      <section aria-label="Settle up section" className="flex flex-col gap-3">
-        <BalanceList
-          balances={settlement?.balances ?? []}
-          members={members}
-          baseCurrency={group.baseCurrency}
-        />
-        <SettleUp
-          transfers={settlement?.transfers ?? null}
-          members={members}
-          baseCurrency={group.baseCurrency}
-          onMarkPaid={onMarkPaid}
-        />
-      </section>
 
       <InstallHint />
     </main>

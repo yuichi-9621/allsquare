@@ -1,5 +1,6 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
+import { logger } from "hono/logger"
 import expenses from "./routes/expenses.js"
 import fxRoute from "./routes/fx.js"
 import groups from "./routes/groups.js"
@@ -8,6 +9,9 @@ import settlement from "./routes/settlement.js"
 import type { Env } from "./types.js"
 
 const app = new Hono<{ Bindings: Env }>()
+
+// Request lines (method, path, status, ms) land in Workers Logs.
+app.use("*", logger())
 
 // The web app is served from a different origin (Cloudflare Pages); allow all.
 app.use("*", cors())

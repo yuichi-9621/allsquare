@@ -18,7 +18,7 @@ export function Dashboard() {
   }
 
   return (
-    <main className="flex w-full flex-col gap-5">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">
           Your trips
@@ -27,7 +27,7 @@ export function Dashboard() {
           Trips you've started or opened on this device.
         </p>
       </div>
-      <ul aria-label="Your trips" className="flex flex-col gap-3">
+      <ul aria-label="Your trips" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {trips.map((trip) => (
           <TripCard key={trip.slug} trip={trip} onForget={forget} />
         ))}

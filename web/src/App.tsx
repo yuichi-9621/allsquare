@@ -6,7 +6,7 @@ import { Landing } from "./routes/Landing"
 
 export function App() {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-4 p-4 sm:p-8">
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-4 p-4 sm:p-8 lg:max-w-5xl">
       <header className="flex items-baseline justify-between gap-3 px-1">
         <Link
           to="/"

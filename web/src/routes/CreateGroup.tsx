@@ -54,7 +54,11 @@ export function CreateGroup() {
   }
 
   return (
-    <form onSubmit={onSubmit} aria-label="Create group" className="flex w-full flex-col gap-6">
+    <form
+      onSubmit={onSubmit}
+      aria-label="Create group"
+      className="mx-auto flex w-full max-w-lg flex-col gap-6"
+    >
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
           Split anything on a trip. End up all square.

@@ -40,3 +40,8 @@ test("closes on the All square promise", () => {
   renderLanding()
   screen.getByText("All square")
 })
+
+test("states the no-cookies privacy promise", () => {
+  renderLanding()
+  screen.getByText(/No cookies, no tracking/)
+})

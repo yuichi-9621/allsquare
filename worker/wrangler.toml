@@ -16,3 +16,8 @@ binding = "DB"
 database_name = "allsquare"
 database_id = "9807b6f8-0aaa-42b1-bfa7-ee466f86507c"
 migrations_dir = "migrations"
+
+# Persistent request logs: Cloudflare dashboard -> Workers & Pages ->
+# allsquare-worker -> Logs. Live stream: `wrangler tail allsquare-worker`.
+[observability]
+enabled = true
