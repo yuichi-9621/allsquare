@@ -8,10 +8,12 @@ export function SettleUp({
   transfers,
   members,
   baseCurrency,
+  onMarkPaid,
 }: {
   transfers: Transfer[] | null
   members: Member[]
   baseCurrency: string
+  onMarkPaid: (transfer: Transfer) => Promise<void>
 }) {
   return (
     <section aria-label="Settle up">
@@ -31,6 +33,7 @@ export function SettleUp({
               transfer={t}
               members={members}
               baseCurrency={baseCurrency}
+              onMarkPaid={onMarkPaid}
             />
           ))}
         </div>

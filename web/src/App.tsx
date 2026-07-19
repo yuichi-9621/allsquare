@@ -14,7 +14,7 @@ export function App() {
           Allsquare
         </Link>
         <span className="font-mono text-[0.62rem] uppercase tracking-wider text-muted-foreground">
-          split · settle · square up
+          split · settle · all square
         </span>
       </header>
       <Routes>

@@ -12,9 +12,9 @@ import { TripMenu } from "../components/TripMenu"
 import { useGroup } from "../hooks/useGroup"
 import { useSettlement } from "../hooks/useSettlement"
 import { getActiveMemberId, setActiveMemberId } from "../lib/activeMember"
-import { deleteExpense } from "../lib/api"
+import { addExpense, deleteExpense } from "../lib/api"
 import { recordTrip } from "../lib/recentTrips"
-import type { Member, Rounding } from "../lib/types"
+import type { Member, Rounding, Transfer } from "../lib/types"
 
 export function GroupPage() {
   const { slug = "" } = useParams()
@@ -68,6 +68,25 @@ export function GroupPage() {
       await refresh()
     },
     [slug, refresh],
+  )
+
+  // Recording a payment IS an expense: the debtor "paid for" the creditor's
+  // full amount, so both balances cancel and the transfer disappears. Base
+  // currency, so no FX freeze is involved; deletable like any expense to undo.
+  const onMarkPaid = useCallback(
+    async (t: Transfer) => {
+      if (!state) return
+      const nameOf = new Map(state.members.map((m) => [m.id, m.name]))
+      await addExpense(slug, {
+        payerId: t.from,
+        amountMinor: t.amountMinor,
+        currency: state.group.baseCurrency,
+        description: `${nameOf.get(t.from) ?? "?"} paid ${nameOf.get(t.to) ?? "?"}`,
+        split: { kind: "exact", shares: [{ memberId: t.to, amountMinor: t.amountMinor }] },
+      })
+      await refresh()
+    },
+    [slug, state, refresh],
   )
 
   const closeForm = useCallback(() => {
@@ -178,6 +197,7 @@ export function GroupPage() {
           transfers={settlement?.transfers ?? null}
           members={members}
           baseCurrency={group.baseCurrency}
+          onMarkPaid={onMarkPaid}
         />
       </section>
 

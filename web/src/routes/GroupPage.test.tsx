@@ -175,6 +175,74 @@ test("deleting an expense calls DELETE and refreshes the group", async () => {
   await waitFor(() => expect(getCount).toBeGreaterThan(before))
 })
 
+test("Mark paid records the repayment as an exact expense and flips to All square", async () => {
+  const owing: Settlement = {
+    balances: [
+      { memberId: "m1", netMinor: 2500 },
+      { memberId: "m2", netMinor: -2500 },
+    ],
+    transfers: [{ from: "m2", to: "m1", amountMinor: 2500 }],
+  }
+  const square: Settlement = { balances: [], transfers: [] }
+  let posted: unknown = null
+  let paid = false
+  const paidState: GroupState = {
+    ...state,
+    expenses: [
+      {
+        id: "e9",
+        payerId: "m2",
+        amountMinor: 2500,
+        currency: "USD",
+        fxRateToBase: 1,
+        fxRateDate: "2026-07-18",
+        description: "Bob paid Alice",
+        split: { kind: "exact", shares: [{ memberId: "m1", amountMinor: 2500 }] },
+        createdAt: "2026-07-18T00:00:00Z",
+      },
+    ],
+  }
+  server.use(
+    http.get("http://localhost/api/groups/abc123", () =>
+      HttpResponse.json(paid ? paidState : state),
+    ),
+    http.get("http://localhost/api/groups/abc123/settlement", () =>
+      HttpResponse.json(paid ? square : owing),
+    ),
+    http.post("http://localhost/api/groups/abc123/expenses", async ({ request }) => {
+      posted = await request.json()
+      paid = true
+      return HttpResponse.json(paidState.expenses[0], { status: 201 })
+    }),
+  )
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter initialEntries={["/g/abc123"]}>
+      <Routes>
+        <Route path="/g/:slug" element={<GroupPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+  await screen.findByText("Bob → Alice")
+  screen.getByText("Not yet square")
+
+  await user.click(screen.getByRole("button", { name: "Mark Bob paid Alice" }))
+
+  // The repayment is the debtor covering the creditor's full amount, in base.
+  await waitFor(() =>
+    expect(posted).toEqual({
+      payerId: "m2",
+      amountMinor: 2500,
+      currency: "USD",
+      description: "Bob paid Alice",
+      split: { kind: "exact", shares: [{ memberId: "m1", amountMinor: 2500 }] },
+    }),
+  )
+  // Transfers drain to zero and the stamp flips.
+  await screen.findByText("All square")
+  await waitFor(() => expect(screen.queryByText("Bob → Alice")).toBeNull())
+})
+
 test("refetches settlement when the expense ledger changes", async () => {
   const withExpense: GroupState = {
     ...state,
