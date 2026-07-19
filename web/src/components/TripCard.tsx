@@ -1,6 +1,7 @@
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
 import type { BadgeProps } from "@allsquare/ui"
 import { Link } from "react-router-dom"
+import { useT } from "../lib/i18n"
 import { useTripStatus } from "../hooks/useTripStatus"
 import { getActiveMemberId } from "../lib/activeMember"
 import { formatMoney } from "../lib/money"
@@ -28,6 +29,7 @@ export function TripCard({
   trip: SavedTrip
   onForget: (slug: string) => void
 }) {
+  const t = useT()
   const { loading, unavailable, settlement } = useTripStatus(trip.slug, trip.rounding)
   const activeId = getActiveMemberId(trip.slug)
 
@@ -35,17 +37,17 @@ export function TripCard({
   let statusText: string
   if (loading) {
     statusKind = "loading"
-    statusText = "Checking…"
+    statusText = t("tripStatusChecking")
   } else if (unavailable || !settlement) {
     statusKind = "unavailable"
-    statusText = "Couldn't load"
+    statusText = t("tripStatusUnavailable")
   } else if (settlement.transfers.length === 0) {
     statusKind = "settled"
-    statusText = "Settled"
+    statusText = t("tripStatusSettled")
   } else {
     statusKind = "owing"
     const n = settlement.transfers.length
-    statusText = `${n} payment${n === 1 ? "" : "s"} to settle`
+    statusText = n === 1 ? t("tripStatusToSettleOne") : t("tripStatusToSettle", { n })
   }
 
   // "Your position" only when you've told this device who you are on this trip.
@@ -55,16 +57,16 @@ export function TripCard({
   if (balance) {
     if (balance.netMinor > 0) {
       position = {
-        text: `You are owed ${formatMoney(balance.netMinor, trip.baseCurrency)}`,
+        text: t("youAreOwedAmount", { amount: formatMoney(balance.netMinor, trip.baseCurrency) }),
         tone: "owed",
       }
     } else if (balance.netMinor < 0) {
       position = {
-        text: `You owe ${formatMoney(-balance.netMinor, trip.baseCurrency)}`,
+        text: t("youOweAmount", { amount: formatMoney(-balance.netMinor, trip.baseCurrency) }),
         tone: "owe",
       }
     } else {
-      position = { text: "You are all square", tone: "square" }
+      position = { text: t("youAreAllSquare"), tone: "square" }
     }
   }
 
@@ -92,11 +94,11 @@ export function TripCard({
           type="button"
           variant="ghost"
           size="sm"
-          aria-label={`Remove ${trip.title}`}
+          aria-label={t("removeTrip", { title: trip.title })}
           onClick={() => onForget(trip.slug)}
           className="absolute right-2 top-2"
         >
-          Remove
+          {t("remove")}
         </Button>
       </Card>
     </li>

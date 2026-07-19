@@ -1,6 +1,7 @@
 import { Button } from "@allsquare/ui"
 import { useState } from "react"
 import { CATEGORIES } from "../lib/categories"
+import { useT } from "../lib/i18n"
 import { convertMinor } from "../lib/money"
 import { isRepayment } from "../lib/shareCard"
 import type { Expense, Member } from "../lib/types"
@@ -17,6 +18,7 @@ export function SpendingBreakdown({
   members: Member[]
   baseCurrency: string
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
 
   const totals = new Map<string, number>()
@@ -34,7 +36,7 @@ export function SpendingBreakdown({
   if (rows.length === 0) return null
 
   return (
-    <section aria-label="Spending" className="flex flex-col gap-2">
+    <section aria-label={t("spending")} className="flex flex-col gap-2">
       <Button
         type="button"
         variant="ghost"
@@ -43,7 +45,7 @@ export function SpendingBreakdown({
         onClick={() => setOpen((v) => !v)}
         className="w-fit justify-start px-1 font-mono text-xs uppercase tracking-wider text-muted-foreground"
       >
-        Spending {open ? "▾" : "▸"}
+        {t("spending")} {open ? "▾" : "▸"}
       </Button>
       {open ? (
         <ul className="flex flex-col gap-2">
@@ -54,7 +56,7 @@ export function SpendingBreakdown({
                   <span aria-hidden className="mr-1">
                     {r.emoji}
                   </span>
-                  {r.label}
+                  {t(r.labelKey)}
                 </span>
                 <MoneyAmount
                   amountMinor={r.totalMinor}

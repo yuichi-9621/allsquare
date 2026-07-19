@@ -1,8 +1,10 @@
 import { Button } from "@allsquare/ui"
+import { useT } from "../lib/i18n"
 import { useState } from "react"
 import { QrCode } from "./QrCode"
 
 export function ShareBar({ url }: { url: string }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   const copy = async () => {
@@ -18,7 +20,7 @@ export function ShareBar({ url }: { url: string }) {
   return (
     <section aria-label="Share" className="flex flex-col items-center gap-3">
       <Button type="button" variant="secondary" onClick={copy} className="w-full">
-        {copied ? "Copied!" : "Copy link"}
+        {copied ? t("copied") : t("copyLink")}
       </Button>
       <QrCode value={url} />
     </section>

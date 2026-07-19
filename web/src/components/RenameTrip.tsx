@@ -1,6 +1,7 @@
 import { Button, Input, Label } from "@allsquare/ui"
 import { type FormEvent, useId, useState } from "react"
 import { renameGroup } from "../lib/api"
+import { useT } from "../lib/i18n"
 
 export function RenameTrip({
   slug,
@@ -11,6 +12,7 @@ export function RenameTrip({
   title: string
   onRenamed: () => void
 }) {
+  const t = useT()
   const inputId = useId()
   const [name, setName] = useState(title)
   const [saving, setSaving] = useState(false)
@@ -20,7 +22,7 @@ export function RenameTrip({
     event.preventDefault()
     const next = name.trim()
     if (next === "") {
-      setError("Enter a trip name.")
+      setError(t("enterTripName"))
       return
     }
     setError(null)
@@ -29,16 +31,16 @@ export function RenameTrip({
       await renameGroup(slug, next)
       onRenamed()
     } catch {
-      setError("Could not rename the trip.")
+      setError(t("renameTripError"))
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <form onSubmit={onSubmit} aria-label="Rename trip" className="flex flex-col gap-2">
+    <form onSubmit={onSubmit} aria-label={t("renameTripTitle")} className="flex flex-col gap-2">
       <div className="flex flex-col gap-1">
-        <Label htmlFor={inputId}>Trip name</Label>
+        <Label htmlFor={inputId}>{t("tripName")}</Label>
         <Input id={inputId} value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       {error ? (
@@ -47,7 +49,7 @@ export function RenameTrip({
         </p>
       ) : null}
       <Button type="submit" disabled={saving}>
-        Save name
+        {t("saveName")}
       </Button>
     </form>
   )

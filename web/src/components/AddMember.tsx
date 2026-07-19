@@ -1,6 +1,7 @@
 import { Button, Input, Label } from "@allsquare/ui"
 import { type FormEvent, useId, useState } from "react"
 import { addMember } from "../lib/api"
+import { useT } from "../lib/i18n"
 import type { Member } from "../lib/types"
 
 // Adds a member to an existing group. Calls the API itself (same pattern as
@@ -9,14 +10,15 @@ import type { Member } from "../lib/types"
 export function AddMember({
   slug,
   onAdded,
-  label = "Add member",
-  submitLabel = "Add member",
+  label,
+  submitLabel,
 }: {
   slug: string
   onAdded: (member: Member) => void
   label?: string
   submitLabel?: string
 }) {
+  const t = useT()
   const inputId = useId()
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +28,7 @@ export function AddMember({
     event.preventDefault()
     const trimmed = name.trim()
     if (trimmed === "") {
-      setError("Enter a name.")
+      setError(t("enterName"))
       return
     }
     setError(null)
@@ -36,21 +38,21 @@ export function AddMember({
       setName("")
       onAdded(member)
     } catch {
-      setError("Could not add the member.")
+      setError(t("addMemberError"))
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={onSubmit} aria-label="Add member" className="flex flex-col gap-2">
+    <form onSubmit={onSubmit} aria-label={t("addMemberFormTitle")} className="flex flex-col gap-2">
       <div className="flex flex-col gap-1">
-        <Label htmlFor={inputId}>{label}</Label>
+        <Label htmlFor={inputId}>{label ?? t("addMemberField")}</Label>
         <Input
           id={inputId}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
+          placeholder={t("namePlaceholder")}
         />
       </div>
       {error ? (
@@ -59,7 +61,7 @@ export function AddMember({
         </p>
       ) : null}
       <Button type="submit" disabled={submitting}>
-        {submitLabel}
+        {submitLabel ?? t("addMemberSubmitDefault")}
       </Button>
     </form>
   )

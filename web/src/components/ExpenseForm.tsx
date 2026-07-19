@@ -15,6 +15,7 @@ import { type FormEvent, useEffect, useState } from "react"
 import { addExpense, editExpense, getFx } from "../lib/api"
 import { CATEGORIES, type CategoryId } from "../lib/categories"
 import { todayISODate } from "../lib/date"
+import { useT } from "../lib/i18n"
 import { compileItems } from "../lib/items"
 import { convertMinor, formatMoney, minorToInput, parseMajorToMinor } from "../lib/money"
 import type { Expense, ExpenseBody, ExpenseItem, Group, Member } from "../lib/types"
@@ -42,6 +43,7 @@ export function ExpenseForm({
   onCancel?: (() => void) | undefined
   recent?: Expense[] | undefined
 }) {
+  const t = useT()
   const base = group.baseCurrency
   const editing = expense !== undefined
   const [payerId, setPayerId] = useState(expense?.payerId ?? defaultPayerId ?? members[0]?.id ?? "")
@@ -198,7 +200,7 @@ export function ExpenseForm({
     event.preventDefault()
     setError(null)
     if (payerId === "" || description.trim() === "") {
-      setError("Choose a payer and add a description.")
+      setError(t("payerDescRequired"))
       return
     }
 
@@ -208,11 +210,11 @@ export function ExpenseForm({
       for (const r of itemRows) {
         const amountMinor = parseMajorToMinor(r.amount, currency)
         if (r.name.trim() === "" || amountMinor === null || amountMinor <= 0) {
-          setError("Every item needs a name and a valid amount.")
+          setError(t("itemNameAmountRequired"))
           return
         }
         if (r.memberIds.length === 0) {
-          setError(`Assign "${r.name.trim()}" to at least one person.`)
+          setError(t("assignItemTo", { name: r.name.trim() }))
           return
         }
         // Keep assignee order stable (server member order) so shares compile
@@ -221,7 +223,7 @@ export function ExpenseForm({
         items.push({ name: r.name.trim(), amountMinor, memberIds })
       }
       if (items.length === 0) {
-        setError("Add at least one item.")
+        setError(t("addAtLeastOneItem"))
         return
       }
       body = {
@@ -235,12 +237,12 @@ export function ExpenseForm({
       }
     } else if (splitKind === "equal") {
       if (equalAmountMinor === null) {
-        setError("Enter a valid amount.")
+        setError(t("invalidAmount"))
         return
       }
       const participantIds = members.map((m) => m.id).filter((id) => participants.has(id))
       if (participantIds.length === 0) {
-        setError("Pick at least one participant.")
+        setError(t("pickParticipant"))
         return
       }
       body = {
@@ -259,7 +261,7 @@ export function ExpenseForm({
         }))
         .filter((s) => s.amountMinor > 0)
       if (shares.length === 0) {
-        setError("Enter each person's exact amount.")
+        setError(t("enterExactAmounts"))
         return
       }
       body = {
@@ -286,7 +288,7 @@ export function ExpenseForm({
         onAdded()
       }
     } catch {
-      setError(editing ? "Could not save the expense." : "Could not add the expense.")
+      setError(editing ? t("saveExpenseError") : t("addExpenseError"))
     } finally {
       setSubmitting(false)
     }
@@ -295,14 +297,14 @@ export function ExpenseForm({
   return (
     <form
       onSubmit={onSubmit}
-      aria-label={editing ? "Edit expense" : "Add expense"}
+      aria-label={editing ? t("editExpense") : t("addExpenseFormAria")}
       className="flex flex-col gap-4"
     >
-      <h2 className="text-lg font-semibold">{editing ? "Edit expense" : "Add an expense"}</h2>
+      <h2 className="text-lg font-semibold">{editing ? t("editExpense") : t("addAnExpense")}</h2>
       {!editing && recent && recent.length > 0 ? (
         <div className="flex flex-col gap-1.5">
           <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            Add again
+            {t("addAgain")}
           </span>
           <div className="flex flex-wrap gap-2">
             {recent.map((e) => (
@@ -320,9 +322,9 @@ export function ExpenseForm({
         </div>
       ) : null}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="payer-trigger">Who paid?</Label>
+        <Label htmlFor="payer-trigger">{t("whoPaid")}</Label>
         <Select value={payerId} onValueChange={setPayerId}>
-          <SelectTrigger id="payer-trigger" aria-label="Payer" className="font-semibold">
+          <SelectTrigger id="payer-trigger" aria-label={t("payerAria")} className="font-semibold">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -335,7 +337,7 @@ export function ExpenseForm({
         </Select>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("description")}</Label>
         <Input
           id="description"
           value={description}
@@ -344,13 +346,14 @@ export function ExpenseForm({
       </div>
       <fieldset className="space-y-2.5">
         <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          Category
+          {t("category")}
         </legend>
-        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Category">
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={t("category")}>
           {CATEGORIES.map((c) => (
             <button
               key={c.id}
               type="button"
+              // biome-ignore lint/a11y/useSemanticElements: styled chip radios; native inputs can't take this treatment
               role="radio"
               aria-checked={category === c.id}
               onClick={() => setCategory(c.id)}
@@ -360,7 +363,7 @@ export function ExpenseForm({
                   : "border-input text-muted-foreground"
               }`}
             >
-              {c.emoji} {c.label}
+              {c.emoji} {t(c.labelKey)}
             </button>
           ))}
         </div>
@@ -368,7 +371,7 @@ export function ExpenseForm({
 
       <fieldset className="space-y-2.5">
         <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          Split
+          {t("split")}
         </legend>
         <RadioGroup
           value={splitKind}
@@ -376,30 +379,30 @@ export function ExpenseForm({
           className="gap-2.5"
         >
           <div className="flex items-center gap-2.5">
-            <RadioGroupItem value="equal" id="split-equal" aria-label="Equal" />
+            <RadioGroupItem value="equal" id="split-equal" aria-label={t("equal")} />
             <Label htmlFor="split-equal" className="text-foreground">
-              Equal
+              {t("equal")}
             </Label>
           </div>
           <div className="flex items-center gap-2.5">
-            <RadioGroupItem value="exact" id="split-exact" aria-label="Exact" />
+            <RadioGroupItem value="exact" id="split-exact" aria-label={t("exact")} />
             <Label htmlFor="split-exact" className="text-foreground">
-              Exact
+              {t("exact")}
             </Label>
           </div>
           <div className="flex items-center gap-2.5">
-            <RadioGroupItem value="items" id="split-items" aria-label="Items" />
+            <RadioGroupItem value="items" id="split-items" aria-label={t("items")} />
             <Label htmlFor="split-items" className="text-foreground">
-              Items
+              {t("items")}
             </Label>
           </div>
         </RadioGroup>
       </fieldset>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="currency-trigger">Currency</Label>
+        <Label htmlFor="currency-trigger">{t("currency")}</Label>
         <Select value={currency} onValueChange={setCurrency}>
-          <SelectTrigger id="currency-trigger" aria-label="Currency">
+          <SelectTrigger id="currency-trigger" aria-label={t("currency")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -415,22 +418,22 @@ export function ExpenseForm({
       {splitKind === "items" ? (
         <fieldset className="space-y-3">
           <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            Items ({currency})
+            {t("itemsLegend", { currency })}
           </legend>
           {itemRows.map((row, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional edit slots
             <div key={i} className="flex flex-col gap-1.5 rounded-md border border-input p-2.5">
               <div className="flex items-center gap-2">
                 <Input
-                  aria-label={`Item ${i + 1} name`}
-                  placeholder="Item"
+                  aria-label={t("itemNName", { n: i + 1 })}
+                  placeholder={t("itemPlaceholder")}
                   value={row.name}
                   onChange={(e) => setItemRow(i, { name: e.target.value })}
                   className="min-w-0 flex-1"
                 />
                 <Input
-                  aria-label={`Item ${i + 1} amount`}
-                  placeholder="0.00"
+                  aria-label={t("itemNAmount", { n: i + 1 })}
+                  placeholder={t("amountPlaceholder")}
                   inputMode="decimal"
                   value={row.amount}
                   onChange={(e) => setItemRow(i, { amount: e.target.value })}
@@ -441,7 +444,7 @@ export function ExpenseForm({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    aria-label={`Remove item ${i + 1}`}
+                    aria-label={t("removeItemN", { n: i + 1 })}
                     onClick={() => setItemRows((rows) => rows.filter((_, j) => j !== i))}
                   >
                     ✕
@@ -456,7 +459,7 @@ export function ExpenseForm({
                       key={m.id}
                       type="button"
                       aria-pressed={on}
-                      aria-label={`Item ${i + 1}: ${m.name}`}
+                      aria-label={t("itemNMember", { n: i + 1, name: m.name })}
                       onClick={() => toggleItemMember(i, m.id)}
                       className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-sm transition-colors ${
                         on
@@ -475,11 +478,11 @@ export function ExpenseForm({
                 })}
                 <button
                   type="button"
-                  aria-label={`Item ${i + 1}: everyone`}
+                  aria-label={t("itemNEveryone", { n: i + 1 })}
                   onClick={() => setItemRow(i, { memberIds: members.map((m) => m.id) })}
                   className="rounded-full border border-input px-2 py-0.5 text-sm text-muted-foreground"
                 >
-                  Everyone
+                  {t("everyone")}
                 </button>
               </div>
             </div>
@@ -495,21 +498,21 @@ export function ExpenseForm({
               ])
             }
           >
-            Add item
+            {t("addItem")}
           </Button>
           <p data-testid="items-total" className="text-sm">
-            Total {formatMoney(itemsTotalMinor, currency)}
+            {t("totalAmount", { amount: formatMoney(itemsTotalMinor, currency) })}
           </p>
           {preview !== null ? (
             <p data-testid="fx-preview" className="text-sm text-muted-foreground">
-              ≈ {formatMoney(preview, base)}
+              {t("approxBase", { amount: formatMoney(preview, base) })}
             </p>
           ) : null}
         </fieldset>
       ) : splitKind === "equal" ? (
         <>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">{t("amount")}</Label>
             <Input
               id="amount"
               value={amount}
@@ -519,12 +522,12 @@ export function ExpenseForm({
           </div>
           {preview !== null ? (
             <p data-testid="fx-preview" className="text-sm text-muted-foreground">
-              ≈ {formatMoney(preview, base)}
+              {t("approxBase", { amount: formatMoney(preview, base) })}
             </p>
           ) : null}
           <fieldset className="space-y-2.5">
             <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-              Participants
+              {t("participants")}
             </legend>
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-2.5">
@@ -544,14 +547,14 @@ export function ExpenseForm({
       ) : (
         <fieldset className="space-y-2.5">
           <legend className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            Exact amounts ({currency})
+            {t("exactAmountsLegend", { currency })}
           </legend>
           {members.map((m) => (
             <div key={m.id} className="flex flex-col gap-1.5">
               <Label htmlFor={`exact-${m.id}`}>{m.name}</Label>
               <Input
                 id={`exact-${m.id}`}
-                aria-label={`Exact amount for ${m.name}`}
+                aria-label={t("exactAmountFor", { name: m.name })}
                 value={exact[m.id] ?? ""}
                 onChange={(e) => setExact((prev) => ({ ...prev, [m.id]: e.target.value }))}
                 inputMode="decimal"
@@ -559,11 +562,11 @@ export function ExpenseForm({
             </div>
           ))}
           <p data-testid="exact-total" className="text-sm">
-            Total {formatMoney(exactTotalMinor, currency)}
+            {t("totalAmount", { amount: formatMoney(exactTotalMinor, currency) })}
           </p>
           {preview !== null ? (
             <p data-testid="fx-preview" className="text-sm text-muted-foreground">
-              ≈ {formatMoney(preview, base)}
+              {t("approxBase", { amount: formatMoney(preview, base) })}
             </p>
           ) : null}
         </fieldset>
@@ -577,11 +580,11 @@ export function ExpenseForm({
       <div className="flex items-stretch gap-2">
         {onCancel ? (
           <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancel
+            {t("cancel")}
           </Button>
         ) : null}
         <Button type="submit" disabled={submitting} className="flex-1">
-          {editing ? "Save changes" : "Add expense"}
+          {editing ? t("saveChanges") : t("addExpenseFormAria")}
         </Button>
       </div>
     </form>

@@ -16,12 +16,14 @@ import { useGroup } from "../hooks/useGroup"
 import { useSettlement } from "../hooks/useSettlement"
 import { getActiveMemberId, setActiveMemberId } from "../lib/activeMember"
 import { addExpense, deleteExpense } from "../lib/api"
+import { useT } from "../lib/i18n"
 import { usePageMeta } from "../lib/pageMeta"
 import { recordTrip } from "../lib/recentTrips"
 import { isRepayment } from "../lib/shareCard"
 import type { Member, Rounding, Transfer } from "../lib/types"
 
 export function GroupPage() {
+  const t = useT()
   const { slug = "" } = useParams()
   const { state, error, refresh } = useGroup(slug)
   const [activeId, setActiveId] = useState<string | null>(() => getActiveMemberId(slug))
@@ -37,7 +39,10 @@ export function GroupPage() {
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Trip pages are private invitations (secret slug): never indexed.
-  usePageMeta({ title: `${state?.group.title ?? "Trip"} | Allsquare`, noindex: true })
+  usePageMeta({
+    title: t("groupPageMetaTitle", { title: state?.group.title ?? t("tripFallback") }),
+    noindex: true,
+  })
 
   // Content key (not count) so a same-count edit still refetches balances.
   const revision = JSON.stringify(state?.expenses ?? [])
@@ -85,16 +90,23 @@ export function GroupPage() {
   // full amount, so both balances cancel and the transfer disappears. Base
   // currency, so no FX freeze is involved; deletable like any expense to undo.
   const onMarkPaid = useCallback(
-    async (t: Transfer) => {
+    async (transfer: Transfer) => {
       if (!state) return
       const nameOf = new Map(state.members.map((m) => [m.id, m.name]))
       const created = await addExpense(slug, {
         kind: "repayment",
-        payerId: t.from,
-        amountMinor: t.amountMinor,
+        payerId: transfer.from,
+        amountMinor: transfer.amountMinor,
         currency: state.group.baseCurrency,
-        description: `${nameOf.get(t.from) ?? "?"} paid ${nameOf.get(t.to) ?? "?"}`,
-        split: { kind: "exact", shares: [{ memberId: t.to, amountMinor: t.amountMinor }] },
+        // Stored data, not UI: the ledger always keeps this literal English
+        // "X paid Y" shape regardless of locale (see lib/shareCard.ts's
+        // isRepayment heuristic and ExpenseCard's repaymentTitle template,
+        // which renders this kind of row locale-aware from payerId/shares).
+        description: `${nameOf.get(transfer.from) ?? "?"} paid ${nameOf.get(transfer.to) ?? "?"}`,
+        split: {
+          kind: "exact",
+          shares: [{ memberId: transfer.to, amountMinor: transfer.amountMinor }],
+        },
       })
       await refresh()
       // Offer an Undo window; recording again resets it to the newest one.
@@ -133,8 +145,8 @@ export function GroupPage() {
     }
   }, [adding, editingId])
 
-  if (error) return <p role="alert">This group could not be loaded.</p>
-  if (!state) return <p>Loading…</p>
+  if (error) return <p role="alert">{t("groupLoadError")}</p>
+  if (!state) return <p>{t("loading")}</p>
 
   const { group, members, expenses } = state
   const shareUrl = `${window.location.origin}/g/${group.slug}`
@@ -175,15 +187,17 @@ export function GroupPage() {
             <MemberPicker members={members} onPick={pick} />
             <AddMember
               slug={slug}
-              label="Not listed? Add your name"
-              submitLabel="Add & continue"
+              label={t("notListedAddName")}
+              submitLabel={t("addAndContinue")}
               onAdded={addSelf}
             />
           </CardContent>
         </Card>
       ) : (
         <p className="text-sm text-muted-foreground">
-          You are {members.find((m) => m.id === activeId)?.name ?? "a member"}.
+          {t("youAreText", {
+            name: members.find((m) => m.id === activeId)?.name ?? t("unknownMember"),
+          })}
         </p>
       )}
 
@@ -217,14 +231,14 @@ export function GroupPage() {
               </Card>
             ) : (
               <Button type="button" size="lg" className="w-full" onClick={() => setAdding(true)}>
-                Add an expense
+                {t("addAnExpense")}
               </Button>
             )}
           </div>
 
-          <section aria-label="Expenses" className="flex flex-col gap-3">
+          <section aria-label={t("expenses")} className="flex flex-col gap-3">
             <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-              Expenses
+              {t("expenses")}
             </h2>
             <ExpenseList
               expenses={expenses}
@@ -238,7 +252,7 @@ export function GroupPage() {
 
         {/* Settle up — read last on mobile, always in view on desktop. */}
         <section
-          aria-label="Settle up section"
+          aria-label={t("settleUpSection")}
           className="flex w-full flex-col gap-3 lg:sticky lg:top-6 lg:w-80 lg:shrink-0"
         >
           <BalanceList
@@ -274,12 +288,13 @@ export function GroupPage() {
 
       {undoId ? (
         <div
+          // biome-ignore lint/a11y/useSemanticElements: toast live region; output element is form-associated and wrong here
           role="status"
           className="surface-paper fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-md border border-border/20 bg-card px-4 py-2.5 text-card-foreground shadow-lg"
         >
-          <span className="text-sm">Marked paid.</span>
+          <span className="text-sm">{t("markedPaid")}</span>
           <Button type="button" variant="outline" size="sm" onClick={undoMarkPaid}>
-            Undo
+            {t("undo")}
           </Button>
         </div>
       ) : null}

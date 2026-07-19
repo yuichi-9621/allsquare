@@ -1,5 +1,6 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
 import { categoryOf } from "../lib/categories"
+import { useT } from "../lib/i18n"
 import { convertMinor, splitEqualMinor } from "../lib/money"
 import type { Expense, Member } from "../lib/types"
 import { MemberAvatar } from "./MemberAvatar"
@@ -18,6 +19,7 @@ export function ExpenseCard({
   onEdit?: (expenseId: string) => void
   onDelete?: (expenseId: string) => void
 }) {
+  const t = useT()
   const nameOf = new Map(members.map((m) => [m.id, m.name]))
   // Derived base figure uses the expense's FROZEN rate, never a live one.
   const baseMinor = convertMinor(
@@ -35,6 +37,22 @@ export function ExpenseCard({
         })()
       : expense.split.shares.map((s) => ({ id: s.memberId, amountMinor: s.amountMinor }))
 
+  // Repayments (created by Mark paid) store their description as literal
+  // English data ("X paid Y") so the ledger stays locale-independent; the
+  // UI renders that row's title from the kind flag + payer/recipient ids
+  // instead, so it follows the active locale.
+  const repaymentShareId =
+    expense.kind === "repayment" && expense.split.kind === "exact"
+      ? expense.split.shares[0]?.memberId
+      : undefined
+  const title =
+    expense.kind === "repayment" && repaymentShareId
+      ? t("repaymentTitle", {
+          from: nameOf.get(expense.payerId) ?? "?",
+          to: nameOf.get(repaymentShareId) ?? "?",
+        })
+      : expense.description
+
   return (
     <Card>
       <CardHeader>
@@ -44,7 +62,7 @@ export function ExpenseCard({
               {categoryOf(expense.category)?.emoji}
             </span>
           )}
-          {expense.description}
+          {title}
         </CardTitle>
         <MoneyAmount
           amountMinor={expense.amountMinor}
@@ -57,10 +75,12 @@ export function ExpenseCard({
       <CardContent>
         <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <MemberAvatar members={members} memberId={expense.payerId} />
-          <span className="font-semibold text-foreground">
-            {nameOf.get(expense.payerId) ?? "?"}
-          </span>{" "}
-          paid
+          <span>
+            <span className="font-semibold text-foreground">
+              {nameOf.get(expense.payerId) ?? "?"}
+            </span>
+            {t("expensePaidSuffix")}
+          </span>
         </p>
         {expense.items?.length ? (
           <ul
@@ -113,10 +133,10 @@ export function ExpenseCard({
                 type="button"
                 variant="outline"
                 size="sm"
-                aria-label={`Edit ${expense.description}`}
+                aria-label={t("editAria", { description: expense.description })}
                 onClick={() => onEdit(expense.id)}
               >
-                Edit
+                {t("edit")}
               </Button>
             ) : null}
             {onDelete ? (
@@ -124,10 +144,10 @@ export function ExpenseCard({
                 type="button"
                 variant="ghost"
                 size="sm"
-                aria-label={`Delete ${expense.description}`}
+                aria-label={t("deleteAria", { description: expense.description })}
                 onClick={() => onDelete(expense.id)}
               >
-                Delete
+                {t("delete")}
               </Button>
             ) : null}
           </div>

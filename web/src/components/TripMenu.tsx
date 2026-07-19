@@ -14,17 +14,18 @@ import {
   DropdownMenuTrigger,
 } from "@allsquare/ui"
 import { useState } from "react"
+import { type Locale, type MessageKey, t, useLocale } from "../lib/i18n"
 import type { Member, Rounding } from "../lib/types"
 import { AddMember } from "./AddMember"
 import { PaymentInfo } from "./PaymentInfo"
 import { RenameTrip } from "./RenameTrip"
 import { ShareBar } from "./ShareBar"
 
-const ROUNDING_OPTIONS: { label: string; value: Rounding | "exact" }[] = [
-  { label: "Exact", value: "exact" },
-  { label: "Nearest 1", value: 1 },
-  { label: "Nearest 10", value: 10 },
-  { label: "Nearest 100", value: 100 },
+const ROUNDING_OPTIONS: { labelKey: MessageKey; value: Rounding | "exact" }[] = [
+  { labelKey: "roundingExact", value: "exact" },
+  { labelKey: "roundingNearest1", value: 1 },
+  { labelKey: "roundingNearest10", value: 10 },
+  { labelKey: "roundingNearest100", value: 100 },
 ]
 
 type MenuDialog = "rename" | "share" | "member" | "payment"
@@ -49,6 +50,7 @@ export function TripMenu({
   onRounding: (r: Rounding | undefined) => void
   onChanged: () => void
 }) {
+  const [locale, setLocale] = useLocale()
   const [dialog, setDialog] = useState<MenuDialog | null>(null)
   const close = () => setDialog(null)
   const dialogProps = (name: MenuDialog) => ({
@@ -62,21 +64,27 @@ export function TripMenu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button type="button" variant="ghost" aria-label="Trip menu" className="px-3 text-xl">
+          <Button type="button" variant="ghost" aria-label={t("tripMenu")} className="px-3 text-xl">
             ⋮
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent aria-label="Trip options">
-          <DropdownMenuItem onSelect={() => setDialog("rename")}>Rename trip…</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setDialog("share")}>Share…</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setDialog("member")}>Add member…</DropdownMenuItem>
+        <DropdownMenuContent aria-label={t("tripOptions")}>
+          <DropdownMenuItem onSelect={() => setDialog("rename")}>
+            {t("renameTripMenuItem")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setDialog("share")}>
+            {t("shareMenuItem")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setDialog("member")}>
+            {t("addMemberMenuItem")}
+          </DropdownMenuItem>
           {activeMember ? (
             <DropdownMenuItem onSelect={() => setDialog("payment")}>
-              Your payment info…
+              {t("yourPaymentInfoMenuItem")}
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuSeparator />
-          <DropdownMenuLabel>Round settle-up</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("roundSettleUp")}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             value={String(rounding ?? "exact")}
             onValueChange={(value) =>
@@ -85,16 +93,25 @@ export function TripMenu({
           >
             {ROUNDING_OPTIONS.map((o) => (
               <DropdownMenuRadioItem key={String(o.value)} value={String(o.value)}>
-                {o.label}
+                {t(o.labelKey)}
               </DropdownMenuRadioItem>
             ))}
+          </DropdownMenuRadioGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>{t("language")}</DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            value={locale}
+            onValueChange={(value) => setLocale(value as Locale)}
+          >
+            <DropdownMenuRadioItem value="en">EN</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="ja">日本語</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Dialog {...dialogProps("rename")}>
         <DialogContent aria-describedby={undefined}>
-          <DialogTitle>Rename trip</DialogTitle>
+          <DialogTitle>{t("renameTripTitle")}</DialogTitle>
           <RenameTrip
             slug={slug}
             title={title}
@@ -108,25 +125,23 @@ export function TripMenu({
 
       <Dialog {...dialogProps("share")}>
         <DialogContent>
-          <DialogTitle>Share this trip</DialogTitle>
-          <DialogDescription>
-            Anyone with the link can open the trip. No account needed.
-          </DialogDescription>
+          <DialogTitle>{t("shareTripTitle")}</DialogTitle>
+          <DialogDescription>{t("shareTripDesc")}</DialogDescription>
           <ShareBar url={shareUrl} />
         </DialogContent>
       </Dialog>
 
       <Dialog {...dialogProps("member")}>
         <DialogContent aria-describedby={undefined}>
-          <DialogTitle>Add member</DialogTitle>
-          <AddMember slug={slug} onAdded={onChanged} label="Name" />
+          <DialogTitle>{t("addMemberFormTitle")}</DialogTitle>
+          <AddMember slug={slug} onAdded={onChanged} label={t("memberName")} />
         </DialogContent>
       </Dialog>
 
       {activeMember ? (
         <Dialog {...dialogProps("payment")}>
           <DialogContent aria-describedby={undefined}>
-            <DialogTitle>Your payment info</DialogTitle>
+            <DialogTitle>{t("yourPaymentInfoTitle")}</DialogTitle>
             <PaymentInfo
               slug={slug}
               member={activeMember}

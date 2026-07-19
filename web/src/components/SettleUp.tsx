@@ -1,4 +1,5 @@
 import { Stamp } from "@allsquare/ui"
+import { useT } from "../lib/i18n"
 import type { Member, Transfer } from "../lib/types"
 import { SettleRow } from "./SettleRow"
 
@@ -17,16 +18,20 @@ export function SettleUp({
   note?: string | undefined
   onMarkPaid: (transfer: Transfer) => Promise<void>
 }) {
+  const t = useT()
   return (
-    <section aria-label="Settle up">
+    <section aria-label={t("settleUp")}>
       <div className="flex items-center gap-2">
-        <h2>Settle up</h2>
-        <Stamp state={transfers && transfers.length === 0 ? "square" : "pending"} />
+        <h2>{t("settleUp")}</h2>
+        <Stamp
+          state={transfers && transfers.length === 0 ? "square" : "pending"}
+          labels={{ square: t("allSquareStamp"), pending: t("notYetSquareStamp") }}
+        />
       </div>
       {transfers === null ? (
-        <p>Calculating…</p>
+        <p>{t("calculating")}</p>
       ) : transfers.length === 0 ? (
-        <p>Everyone is all square.</p>
+        <p>{t("allSquareMessage")}</p>
       ) : (
         <div aria-label="Transfers" className="flex flex-col gap-2">
           {transfers.map((t) => (

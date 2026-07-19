@@ -1,5 +1,6 @@
 import { Button } from "@allsquare/ui"
 import { useState } from "react"
+import { useT } from "../lib/i18n"
 import { convertMinor } from "../lib/money"
 import type { Balance, Expense, Member } from "../lib/types"
 import { MemberAvatar } from "./MemberAvatar"
@@ -19,6 +20,7 @@ export function MemberTotals({
   balances: Balance[]
   baseCurrency: string
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
 
   const paidOf = new Map<string, number>()
@@ -29,7 +31,7 @@ export function MemberTotals({
   const netOf = new Map(balances.map((b) => [b.memberId, b.netMinor]))
 
   return (
-    <section aria-label="Totals" className="flex flex-col gap-2">
+    <section aria-label={t("totals")} className="flex flex-col gap-2">
       <Button
         type="button"
         variant="ghost"
@@ -38,16 +40,16 @@ export function MemberTotals({
         onClick={() => setOpen((v) => !v)}
         className="w-fit justify-start px-1 font-mono text-xs uppercase tracking-wider text-muted-foreground"
       >
-        Totals {open ? "▾" : "▸"}
+        {t("totals")} {open ? "▾" : "▸"}
       </Button>
       {open ? (
         <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 gap-y-1.5">
           <span />
           <span className="font-mono text-[0.62rem] uppercase tracking-wider text-muted-foreground">
-            Paid
+            {t("paidHeader")}
           </span>
           <span className="font-mono text-[0.62rem] uppercase tracking-wider text-muted-foreground">
-            Share
+            {t("shareHeader")}
           </span>
           {members.map((m) => {
             const paid = paidOf.get(m.id) ?? 0

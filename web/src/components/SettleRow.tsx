@@ -1,5 +1,6 @@
 import { Button } from "@allsquare/ui"
 import { useState } from "react"
+import { useT } from "../lib/i18n"
 import { paymentTarget } from "../lib/paymentLink"
 import type { Member, Transfer } from "../lib/types"
 import { MemberAvatar } from "./MemberAvatar"
@@ -21,6 +22,7 @@ export function SettleRow({
   note?: string | undefined
   onMarkPaid: (transfer: Transfer) => Promise<void>
 }) {
+  const t = useT()
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -65,8 +67,13 @@ export function SettleRow({
           <MoneyAmount amountMinor={transfer.amountMinor} currency={baseCurrency} />
           {target?.kind === "link" ? (
             <Button asChild variant="secondary" size="sm">
-              <a href={target.href} target="_blank" rel="noreferrer" aria-label={`Pay ${to}`}>
-                Pay
+              <a
+                href={target.href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t("payAria", { name: to })}
+              >
+                {t("pay")}
               </a>
             </Button>
           ) : null}
@@ -75,10 +82,10 @@ export function SettleRow({
               type="button"
               variant="secondary"
               size="sm"
-              aria-label={`Copy ${to}'s payment info`}
+              aria-label={t("copyPaymentInfoAria", { name: to })}
               onClick={() => copyTarget(target.text)}
             >
-              {copied ? "Copied!" : "Pay info"}
+              {copied ? t("copied") : t("payInfo")}
             </Button>
           ) : null}
           <Button
@@ -87,15 +94,15 @@ export function SettleRow({
             size="sm"
             disabled={busy}
             onClick={markPaid}
-            aria-label={`Mark ${from} paid ${to}`}
+            aria-label={t("markPaidAria", { from, to })}
           >
-            {busy ? "Saving…" : "Mark paid"}
+            {busy ? t("saving") : t("markPaid")}
           </Button>
         </div>
       </div>
       {failed ? (
         <p role="alert" className="text-sm text-danger">
-          Could not record the payment.
+          {t("recordPaymentError")}
         </p>
       ) : null}
     </div>

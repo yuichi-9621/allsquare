@@ -2,13 +2,15 @@ import { Button, Card, CardContent, Input, Label } from "@allsquare/ui"
 import { type FormEvent, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createGroup } from "../lib/api"
+import { useT } from "../lib/i18n"
 import { usePageMeta } from "../lib/pageMeta"
 import { recordTrip } from "../lib/recentTrips"
 
 const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "THB", "SGD"]
 
 export function CreateGroup() {
-  usePageMeta({ title: "Start a group | Allsquare" })
+  const t = useT()
+  usePageMeta({ title: t("createGroupMetaTitle") })
   const navigate = useNavigate()
   const [title, setTitle] = useState("")
   const [baseCurrency, setBaseCurrency] = useState("USD")
@@ -30,7 +32,7 @@ export function CreateGroup() {
     event.preventDefault()
     const names = memberNames.map((n) => n.trim()).filter((n) => n !== "")
     if (title.trim() === "" || names.length < 2) {
-      setError("Add a title and at least two members.")
+      setError(t("titleMembersRequired"))
       return
     }
     setSubmitting(true)
@@ -50,7 +52,7 @@ export function CreateGroup() {
       })
       navigate(`/g/${state.group.slug}`)
     } catch {
-      setError("Could not create the group. Try again.")
+      setError(t("createGroupError"))
       setSubmitting(false)
     }
   }
@@ -58,32 +60,29 @@ export function CreateGroup() {
   return (
     <form
       onSubmit={onSubmit}
-      aria-label="Create group"
+      aria-label={t("createGroup")}
       className="mx-auto flex w-full max-w-lg flex-col gap-6"
     >
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
-          Split anything on a trip. End up all square.
+          {t("createGroupHeroTitle")}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          No sign-up. Any currency. Share one link, everyone adds what they paid, and Allsquare
-          works out who owes who.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("createGroupHeroDesc")}</p>
       </div>
 
       <Card>
         <CardContent className="gap-4 pt-4">
           <div className="flex flex-col gap-1">
-            <Label htmlFor="trip-title">Trip title</Label>
+            <Label htmlFor="trip-title">{t("tripTitle")}</Label>
             <Input
               id="trip-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Kyoto trip, Tahoe weekend…"
+              placeholder={t("tripTitlePlaceholder")}
             />
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="base-currency">Base currency</Label>
+            <Label htmlFor="base-currency">{t("baseCurrency")}</Label>
             <select
               id="base-currency"
               value={baseCurrency}
@@ -99,7 +98,7 @@ export function CreateGroup() {
           </div>
           <fieldset className="flex flex-col gap-3 rounded-md border border-border p-4">
             <legend className="px-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-              Members
+              {t("members")}
             </legend>
             {memberNames.map((name, i) => (
               <div
@@ -108,10 +107,10 @@ export function CreateGroup() {
                 key={i}
               >
                 <Input
-                  aria-label={`Member ${i + 1}`}
+                  aria-label={t("memberN", { n: i + 1 })}
                   value={name}
                   onChange={(e) => setName(i, e.target.value)}
-                  placeholder="Name"
+                  placeholder={t("namePlaceholder")}
                   className="flex-1"
                 />
                 {memberNames.length > 2 ? (
@@ -119,10 +118,10 @@ export function CreateGroup() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    aria-label={`Remove member ${i + 1}`}
+                    aria-label={t("removeMemberN", { n: i + 1 })}
                     onClick={() => removeRow(i)}
                   >
-                    Remove
+                    {t("remove")}
                   </Button>
                 ) : null}
               </div>
@@ -134,7 +133,7 @@ export function CreateGroup() {
               onClick={addRow}
               className="self-start"
             >
-              Add member
+              {t("addMemberRow")}
             </Button>
           </fieldset>
           {error ? (
@@ -143,7 +142,7 @@ export function CreateGroup() {
             </p>
           ) : null}
           <Button type="submit" disabled={submitting} className="w-full">
-            Create group
+            {t("createGroup")}
           </Button>
         </CardContent>
       </Card>

@@ -1,5 +1,6 @@
 import { Button } from "@allsquare/ui"
 import { useState } from "react"
+import { useT } from "../lib/i18n"
 import { drawShareCard, tripSummary } from "../lib/shareCard"
 import type { Expense, Group, Member } from "../lib/types"
 
@@ -15,6 +16,7 @@ export function ShareSummary({
   members: Member[]
   expenses: Expense[]
 }) {
+  const t = useT()
   const [busy, setBusy] = useState(false)
 
   const share = async () => {
@@ -47,7 +49,7 @@ export function ShareSummary({
 
   return (
     <Button type="button" variant="secondary" onClick={share} disabled={busy}>
-      {busy ? "Preparing…" : "Share trip summary"}
+      {busy ? t("preparing") : t("shareTripSummary")}
     </Button>
   )
 }

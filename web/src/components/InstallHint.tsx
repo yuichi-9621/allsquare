@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
+import { useT } from "../lib/i18n"
 
 type InstallEvent = Event & { prompt: () => Promise<void> }
 
 export function InstallHint() {
+  const t = useT()
   const [deferred, setDeferred] = useState<InstallEvent | null>(null)
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export function InstallHint() {
         setDeferred(null)
       }}
     >
-      Add Allsquare to your home screen
+      {t("addToHomeScreen")}
     </button>
   )
 }
