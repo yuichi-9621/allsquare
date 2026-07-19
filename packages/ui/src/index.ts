@@ -16,4 +16,22 @@ export {
 export { Checkbox } from "./components/ui/checkbox"
 export { RadioGroup, RadioGroupItem } from "./components/ui/radio-group"
 export { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover"
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "./components/ui/dialog"
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu"
 export { Stamp } from "./components/stamp"

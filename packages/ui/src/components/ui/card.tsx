@@ -16,11 +16,11 @@ export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
 Card.displayName = "Card"
 
 export const CardHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex items-baseline justify-between gap-2 p-3.5 pb-2", className)} {...p} />
+  <div className={cn("flex items-baseline justify-between gap-2 p-4 pb-2", className)} {...p} />
 )
 export const CardTitle = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("font-semibold", className)} {...p} />
 )
 export const CardContent = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col gap-1.5 px-3.5 pb-3.5", className)} {...p} />
+  <div className={cn("flex flex-col gap-2 px-4 pb-4", className)} {...p} />
 )
