@@ -6,10 +6,10 @@ import type { Member } from "../lib/types"
 const INKS = [
   "bg-secondary text-secondary-foreground",
   "bg-primary text-primary-foreground",
-  "bg-foil text-background",
+  "bg-foil text-primary-foreground",
   "bg-success text-primary-foreground",
-  "bg-muted-foreground text-background",
-  "bg-foreground text-background",
+  "bg-muted-foreground text-card",
+  "bg-foreground text-card",
 ]
 
 export function memberInk(members: Member[], memberId: string): string {

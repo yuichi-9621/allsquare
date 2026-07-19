@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Allsquare">
-  <rect width="512" height="512" rx="113" fill="#0b2016" />
-  <rect x="128" y="178" width="256" height="59" rx="29" fill="#34d399" />
-  <rect x="128" y="275" width="256" height="59" rx="29" fill="#34d399" />
+  <rect width="512" height="512" rx="113" fill="#7BA05B" />
+  <rect x="128" y="178" width="256" height="59" rx="29" fill="#FEFAE0" />
+  <rect x="128" y="275" width="256" height="59" rx="29" fill="#FEFAE0" />
 </svg>

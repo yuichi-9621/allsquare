@@ -1,6 +1,6 @@
 import { Button } from "@allsquare/ui"
-import { useT } from "../lib/i18n"
 import { useState } from "react"
+import { useT } from "../lib/i18n"
 import { QrCode } from "./QrCode"
 
 export function ShareBar({ url }: { url: string }) {

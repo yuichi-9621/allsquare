@@ -1,28 +1,32 @@
-/* "Stamp" theme. Colors are HSL channel triplets so Tailwind's
-   hsl(var(--x) / <alpha>) opacity modifiers work. Rendered values equal the
-   source hex in the plan's palette table. */
+/* "Stamp" theme, sage edition. Colors are HSL channel triplets so Tailwind's
+   hsl(var(--x) / <alpha>) opacity modifiers work.
+
+   Two surfaces, like a passport: a Sage Green cover (#7BA05B) carrying deep
+   green-black ink, and cornsilk paper cards carrying forest ink. The cover is
+   mid-light, so every :root text token below is dark enough for 4.5:1 on sage;
+   .surface-paper re-binds to livelier mid-tones that hit 4.5:1 on cream. */
 :root {
-  /* cover context (Black Forest ground) */
-  --background: 88 39% 15%; /* #283618 */
-  --foreground: 52 92% 94%; /* #FEFAE0 cornsilk text on cover */
+  /* cover context (sage ground, ink text) */
+  --background: 92 27% 49%; /* #7BA05B sage */
+  --foreground: 90 42% 11%; /* #1C2810 deep ink on sage (5.1:1) */
   --card: 52 92% 94%; /* paper */
-  --card-foreground: 88 39% 15%; /* ink on paper */
+  --card-foreground: 88 39% 15%; /* forest ink on paper */
   --popover: 52 92% 94%;
   --popover-foreground: 88 39% 15%;
-  --primary: 28 67% 44%; /* copper */
+  --primary: 90 40% 18%; /* #2E401C deep forest; cream label 10.7:1 */
   --primary-foreground: 52 92% 94%;
-  --secondary: 74 32% 32%; /* olive */
+  --secondary: 92 38% 13%; /* dark moss on cover (4.7:1) */
   --secondary-foreground: 52 92% 94%;
-  --muted: 88 30% 22%;
-  --muted-foreground: 52 25% 72%; /* dim cornsilk on cover */
-  --accent: 32 65% 62%; /* caramel, used as hover/selected tint base */
-  --accent-foreground: 88 39% 15%;
-  --border-solid: 52 30% 80%;
+  --muted: 92 28% 56%; /* lifted sage panel */
+  --muted-foreground: 90 22% 14%; /* dim ink on sage (4.5:1) */
+  --accent: 92 27% 49%; /* sage itself, used as hover/selected tint base */
+  --accent-foreground: 90 42% 11%;
+  --border-solid: 90 42% 11%; /* ink hairlines, used at low alpha */
   --input: 52 30% 80%;
-  --ring: 28 67% 44%; /* copper focus */
-  --foil: 32 65% 62%; /* caramel */
-  --success: 94 49% 33%; /* owed green */
-  --danger: 28 67% 44%; /* owe copper */
+  --ring: 92 45% 26%; /* deep sage focus */
+  --foil: 46 65% 13%; /* dark bronze on cover (4.5:1) */
+  --success: 100 45% 13%; /* dark leaf on cover (4.6:1) */
+  --danger: 12 68% 18%; /* dark brick on cover (4.7:1) */
   --radius: 8px;
 }
 
@@ -32,6 +36,8 @@
   --foreground: 88 39% 15%; /* ink */
   --muted-foreground: 57 23% 40%; /* olive-grey #7C7A4E */
   --border-solid: 88 39% 15%; /* ink hairlines, used at low alpha */
+  --secondary: 92 32% 30%; /* moss #4B6534; cream label 6.2:1 */
+  --foil: 45 74% 30%; /* antique brass #866913 (4.9:1 on cream) */
   --success: 94 49% 33%;
-  --danger: 28 67% 44%;
+  --danger: 14 60% 33%; /* brick #873922 (7.5:1 on cream) */
 }

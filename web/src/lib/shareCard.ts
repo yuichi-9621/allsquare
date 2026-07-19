@@ -53,11 +53,11 @@ export function tripSummary(
   }
 }
 
-const FOREST = "#283618"
-const CORNSILK = "#FEFAE0"
-const CARAMEL = "#DDA15E"
-const OLIVE = "#606C38"
-const MUTED = "#b2b28c"
+// Sage-cover palette; mirrors themes/stamp.css (dark ink on a #7BA05B field).
+const SAGE = "#7BA05B"
+const INK = "#1C2810"
+const FOREST = "#2E401C"
+const MOSS = "#2F4519"
 
 // Draws the 1200x630 "trip settled" card. Returns false when no 2d context
 // is available (jsdom); callers bail quietly.
@@ -70,18 +70,18 @@ export function drawShareCard(
   const ctx = canvas.getContext("2d")
   if (!ctx) return false
 
-  ctx.fillStyle = FOREST
+  ctx.fillStyle = SAGE
   ctx.fillRect(0, 0, 1200, 630)
-  ctx.strokeStyle = CORNSILK
+  ctx.strokeStyle = INK
   ctx.lineWidth = 2
   ctx.strokeRect(24, 24, 1152, 582)
 
-  ctx.fillStyle = CARAMEL
+  ctx.fillStyle = FOREST
   ctx.font = "500 34px 'IBM Plex Mono', monospace"
   ctx.fillText("A L L S Q U A R E", 76, 130)
 
   // Trip title, truncated to fit inside the frame
-  ctx.fillStyle = CORNSILK
+  ctx.fillStyle = INK
   ctx.font = "600 88px 'Archivo Narrow', sans-serif"
   let shown = title
   while (shown.length > 3 && ctx.measureText(shown).width > 1040) {
@@ -89,7 +89,7 @@ export function drawShareCard(
   }
   ctx.fillText(shown, 72, 270)
 
-  ctx.fillStyle = MUTED
+  ctx.fillStyle = MOSS
   ctx.font = "500 30px 'IBM Plex Mono', monospace"
   const people = `${summary.memberCount} ${summary.memberCount === 1 ? "PERSON" : "PEOPLE"}`
   const expensesLabel = `${summary.expenseCount} EXPENSE${summary.expenseCount === 1 ? "" : "S"}`
@@ -97,7 +97,7 @@ export function drawShareCard(
   const currenciesLabel = `${summary.currencyCount} ${summary.currencyCount === 1 ? "CURRENCY" : "CURRENCIES"}`
   ctx.fillText(`${people} · ${currenciesLabel}`, 76, 410)
 
-  ctx.fillStyle = CARAMEL
+  ctx.fillStyle = FOREST
   ctx.font = "500 26px 'IBM Plex Mono', monospace"
   ctx.fillText("ALL-SQR.COM", 76, 552)
 
@@ -105,7 +105,7 @@ export function drawShareCard(
   ctx.save()
   ctx.translate(940, 500)
   ctx.rotate((-9 * Math.PI) / 180)
-  ctx.strokeStyle = OLIVE
+  ctx.strokeStyle = FOREST
   ctx.lineWidth = 6
   if (typeof ctx.roundRect === "function") {
     ctx.beginPath()
@@ -114,7 +114,7 @@ export function drawShareCard(
   } else {
     ctx.strokeRect(-190, -60, 380, 120)
   }
-  ctx.fillStyle = OLIVE
+  ctx.fillStyle = FOREST
   ctx.font = "500 46px 'IBM Plex Mono', monospace"
   const stampText = "ALL SQUARE"
   const w = ctx.measureText(stampText).width

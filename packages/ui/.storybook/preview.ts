@@ -3,7 +3,7 @@ import "../src/styles/index.css"
 
 const preview: Preview = {
   parameters: {
-    backgrounds: { default: "cover", values: [{ name: "cover", value: "#283618" }] },
+    backgrounds: { default: "cover", values: [{ name: "cover", value: "#7BA05B" }] },
     layout: "centered",
   },
 }

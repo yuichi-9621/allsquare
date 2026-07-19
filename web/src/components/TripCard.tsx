@@ -1,9 +1,9 @@
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
 import type { BadgeProps } from "@allsquare/ui"
 import { Link } from "react-router-dom"
-import { useT } from "../lib/i18n"
 import { useTripStatus } from "../hooks/useTripStatus"
 import { getActiveMemberId } from "../lib/activeMember"
+import { useT } from "../lib/i18n"
 import { formatMoney } from "../lib/money"
 import type { SavedTrip } from "../lib/recentTrips"
 
