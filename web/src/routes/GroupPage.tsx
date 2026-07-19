@@ -9,6 +9,7 @@ import { InstallHint } from "../components/InstallHint"
 import { MemberPicker } from "../components/MemberPicker"
 import { MemberTotals } from "../components/MemberTotals"
 import { SettleUp } from "../components/SettleUp"
+import { ShareSummary } from "../components/ShareSummary"
 import { TripMenu } from "../components/TripMenu"
 import { useGroup } from "../hooks/useGroup"
 import { useSettlement } from "../hooks/useSettlement"
@@ -219,6 +220,9 @@ export function GroupPage() {
             baseCurrency={group.baseCurrency}
             onMarkPaid={onMarkPaid}
           />
+          {settlement?.transfers?.length === 0 && expenses.length > 0 ? (
+            <ShareSummary group={group} members={members} expenses={expenses} />
+          ) : null}
         </section>
       </div>
 
