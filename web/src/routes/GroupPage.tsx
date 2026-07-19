@@ -30,6 +30,9 @@ export function GroupPage() {
   const formRef = useRef<HTMLDivElement>(null)
   // Settle-up shows EXACT cents by default; the trip menu can opt into rounding.
   const [rounding, setRounding] = useState<Rounding | undefined>(undefined)
+  // The just-recorded repayment, undoable for a few seconds via a toast.
+  const [undoId, setUndoId] = useState<string | null>(null)
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Trip pages are private invitations (secret slug): never indexed.
   usePageMeta({ title: `${state?.group.title ?? "Trip"} | Allsquare`, noindex: true })
@@ -83,7 +86,7 @@ export function GroupPage() {
     async (t: Transfer) => {
       if (!state) return
       const nameOf = new Map(state.members.map((m) => [m.id, m.name]))
-      await addExpense(slug, {
+      const created = await addExpense(slug, {
         payerId: t.from,
         amountMinor: t.amountMinor,
         currency: state.group.baseCurrency,
@@ -91,9 +94,28 @@ export function GroupPage() {
         split: { kind: "exact", shares: [{ memberId: t.to, amountMinor: t.amountMinor }] },
       })
       await refresh()
+      // Offer an Undo window; recording again resets it to the newest one.
+      if (undoTimer.current) clearTimeout(undoTimer.current)
+      setUndoId(created.id)
+      undoTimer.current = setTimeout(() => setUndoId(null), 6000)
     },
     [slug, state, refresh],
   )
+
+  const undoMarkPaid = useCallback(async () => {
+    if (!undoId) return
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    setUndoId(null)
+    await deleteExpense(slug, undoId)
+    await refresh()
+  }, [undoId, slug, refresh])
+
+  // Don't fire the toast timer against an unmounted page.
+  useEffect(() => {
+    return () => {
+      if (undoTimer.current) clearTimeout(undoTimer.current)
+    }
+  }, [])
 
   const closeForm = useCallback(() => {
     setAdding(false)
@@ -227,6 +249,18 @@ export function GroupPage() {
       </div>
 
       <InstallHint />
+
+      {undoId ? (
+        <div
+          role="status"
+          className="surface-paper fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-md border border-border/20 bg-card px-4 py-2.5 text-card-foreground shadow-lg"
+        >
+          <span className="text-sm">Marked paid.</span>
+          <Button type="button" variant="outline" size="sm" onClick={undoMarkPaid}>
+            Undo
+          </Button>
+        </div>
+      ) : null}
     </main>
   )
 }

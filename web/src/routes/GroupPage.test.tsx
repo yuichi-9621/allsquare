@@ -243,6 +243,66 @@ test("Mark paid records the repayment as an exact expense and flips to All squar
   await waitFor(() => expect(screen.queryByText("Bob → Alice")).toBeNull())
 })
 
+test("Undo after Mark paid deletes the repayment and restores the owing state", async () => {
+  const owing: Settlement = {
+    balances: [
+      { memberId: "m1", netMinor: 2500 },
+      { memberId: "m2", netMinor: -2500 },
+    ],
+    transfers: [{ from: "m2", to: "m1", amountMinor: 2500 }],
+  }
+  const square: Settlement = { balances: [], transfers: [] }
+  let paid = false
+  let deleted = false
+  const repayment = {
+    id: "e9",
+    payerId: "m2",
+    amountMinor: 2500,
+    currency: "USD",
+    fxRateToBase: 1,
+    fxRateDate: "2026-07-18",
+    description: "Bob paid Alice",
+    split: { kind: "exact" as const, shares: [{ memberId: "m1", amountMinor: 2500 }] },
+    createdAt: "2026-07-18T00:00:00Z",
+  }
+  server.use(
+    http.get("http://localhost/api/groups/abc123", () =>
+      HttpResponse.json(paid ? { ...state, expenses: [repayment] } : state),
+    ),
+    http.get("http://localhost/api/groups/abc123/settlement", () =>
+      HttpResponse.json(paid ? square : owing),
+    ),
+    http.post("http://localhost/api/groups/abc123/expenses", () => {
+      paid = true
+      return HttpResponse.json(repayment, { status: 201 })
+    }),
+    http.delete("http://localhost/api/groups/abc123/expenses/e9", () => {
+      paid = false
+      deleted = true
+      return new HttpResponse(null, { status: 204 })
+    }),
+  )
+  const user = userEvent.setup()
+  render(
+    <MemoryRouter initialEntries={["/g/abc123"]}>
+      <Routes>
+        <Route path="/g/:slug" element={<GroupPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+  await screen.findByText("Bob → Alice")
+  await user.click(screen.getByRole("button", { name: "Mark Bob paid Alice" }))
+
+  // Toast appears with an Undo
+  await screen.findByText("Marked paid.")
+  await user.click(screen.getByRole("button", { name: "Undo" }))
+
+  await waitFor(() => expect(deleted).toBe(true))
+  // Toast gone, owing state restored
+  await waitFor(() => expect(screen.queryByText("Marked paid.")).toBeNull())
+  await screen.findByText("Bob → Alice")
+})
+
 test("refetches settlement when the expense ledger changes", async () => {
   const withExpense: GroupState = {
     ...state,
