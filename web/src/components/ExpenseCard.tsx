@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
+import { Button, Card, CardContent, CardHeader, CardTitle, Stamp } from "@allsquare/ui"
 import { categoryOf } from "../lib/categories"
 import { useT } from "../lib/i18n"
 import { convertMinor, splitEqualMinor } from "../lib/money"
@@ -46,16 +46,17 @@ export function ExpenseCard({
     isRepayment && expense.split.kind === "exact" ? expense.split.shares[0]?.memberId : undefined
   const fromName = nameOf.get(expense.payerId) ?? "?"
   const toName = repaymentShareId ? (nameOf.get(repaymentShareId) ?? "?") : "?"
-  // Settlements read as a quieter, tinted card: a transfer arrow "A → B" title
-  // (with a full-sentence aria label for screen readers), a teal "Settlement"
-  // tag, and no per-person breakdown — a repayment is just A paying B in full.
+  // A settlement is a full-size card like any expense, marked by a rotated
+  // rubber "Settlement" stamp (the app's stamp motif) and a transfer arrow
+  // "A → B" title (with a full-sentence aria label for screen readers). No
+  // per-person breakdown — a repayment is just A paying B in full.
   const title =
     isRepayment && repaymentShareId
       ? t("settlementTitle", { from: fromName, to: toName })
       : expense.description
 
   return (
-    <Card className={isRepayment ? "border-foil/30 bg-foil/[0.05]" : undefined}>
+    <Card>
       <CardHeader>
         <CardTitle
           {...(isRepayment && repaymentShareId
@@ -63,9 +64,11 @@ export function ExpenseCard({
             : {})}
         >
           {isRepayment ? (
-            <Badge variant="foil" className="mr-2 align-middle">
-              {t("settlementBadge")}
-            </Badge>
+            <Stamp
+              state="square"
+              labels={{ square: t("settlementBadge") }}
+              className="mr-2 align-middle"
+            />
           ) : (
             <span aria-hidden className="mr-1.5">
               {categoryOf(expense.category)?.emoji}

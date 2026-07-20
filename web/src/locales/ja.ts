@@ -97,8 +97,11 @@ export const ja: Record<MessageKey, string> = {
   category: "カテゴリー",
   split: "分け方",
   equal: "均等",
+  equalDesc: "合計を均等に分けます",
   exact: "金額指定",
+  exactDesc: "各自の負担額を入力します",
   items: "品目ごと",
+  itemizeDesc: "品目ごとに、誰の分かを選びます",
   currency: "通貨",
   itemsLegend: "品目 ({currency})",
   itemNName: "品目{n}の名前",
@@ -127,6 +130,17 @@ export const ja: Record<MessageKey, string> = {
   addExpenseError: "支出を追加できませんでした。",
   cancel: "キャンセル",
   saveChanges: "変更を保存",
+
+  // Payment (settle up recorded from the Add form)
+  modeExpense: "支出",
+  modePayment: "支払い",
+  recordPayment: "支払いを記録",
+  suggestedPayments: "候補",
+  paymentFromLabel: "支払った人",
+  paymentToLabel: "受け取った人",
+  recordPaymentButton: "支払いを記録",
+  samePayerPayeeError: "支払う人と受け取る人は別の人にしてください。",
+  paymentTabsAria: "支出か支払いを追加",
 
   // MemberPicker
   whoAreYou: "あなたは誰ですか?",

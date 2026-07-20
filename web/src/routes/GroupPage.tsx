@@ -1,4 +1,4 @@
-import { Button, Card, CardContent } from "@allsquare/ui"
+import { Button, Card, CardContent, cn } from "@allsquare/ui"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { AddMember } from "../components/AddMember"
@@ -8,6 +8,7 @@ import { ExpenseList } from "../components/ExpenseList"
 import { InstallHint } from "../components/InstallHint"
 import { MemberPicker } from "../components/MemberPicker"
 import { MemberTotals } from "../components/MemberTotals"
+import { PaymentForm } from "../components/PaymentForm"
 import { SettleUp } from "../components/SettleUp"
 import { ShareSummary } from "../components/ShareSummary"
 import { SpendingBreakdown } from "../components/SpendingBreakdown"
@@ -31,6 +32,10 @@ export function GroupPage() {
   // The expense form is collapsed by default so the overview leads; it opens on
   // demand (adding) or whenever an expense is being edited.
   const [adding, setAdding] = useState(false)
+  // When adding (not editing), the form has two tabs: a spending Expense and a
+  // Payment (settle up). Payment lives here so it's behind the one obvious
+  // button, which is where people who mean to record a payback actually look.
+  const [formMode, setFormMode] = useState<"expense" | "payment">("expense")
   const formRef = useRef<HTMLDivElement>(null)
   // Settle-up shows EXACT cents by default; the trip menu can opt into rounding.
   const [rounding, setRounding] = useState<Rounding | undefined>(undefined)
@@ -89,24 +94,22 @@ export function GroupPage() {
   // Recording a payment IS an expense: the debtor "paid for" the creditor's
   // full amount, so both balances cancel and the transfer disappears. Base
   // currency, so no FX freeze is involved; deletable like any expense to undo.
-  const onMarkPaid = useCallback(
-    async (transfer: Transfer) => {
+  // Shared by the Mark-paid buttons (SettleRow) and the Payment tab of the form.
+  const recordPayment = useCallback(
+    async (fromId: string, toId: string, amountMinor: number) => {
       if (!state) return
       const nameOf = new Map(state.members.map((m) => [m.id, m.name]))
       const created = await addExpense(slug, {
         kind: "repayment",
-        payerId: transfer.from,
-        amountMinor: transfer.amountMinor,
+        payerId: fromId,
+        amountMinor,
         currency: state.group.baseCurrency,
         // Stored data, not UI: the ledger always keeps this literal English
         // "X paid Y" shape regardless of locale (see lib/shareCard.ts's
         // isRepayment heuristic and ExpenseCard's repaymentTitle template,
         // which renders this kind of row locale-aware from payerId/shares).
-        description: `${nameOf.get(transfer.from) ?? "?"} paid ${nameOf.get(transfer.to) ?? "?"}`,
-        split: {
-          kind: "exact",
-          shares: [{ memberId: transfer.to, amountMinor: transfer.amountMinor }],
-        },
+        description: `${nameOf.get(fromId) ?? "?"} paid ${nameOf.get(toId) ?? "?"}`,
+        split: { kind: "exact", shares: [{ memberId: toId, amountMinor }] },
       })
       await refresh()
       // Offer an Undo window; recording again resets it to the newest one.
@@ -115,6 +118,11 @@ export function GroupPage() {
       undoTimer.current = setTimeout(() => setUndoId(null), 6000)
     },
     [slug, state, refresh],
+  )
+
+  const onMarkPaid = useCallback(
+    (transfer: Transfer) => recordPayment(transfer.from, transfer.to, transfer.amountMinor),
+    [recordPayment],
   )
 
   const undoMarkPaid = useCallback(async () => {
@@ -135,6 +143,7 @@ export function GroupPage() {
   const closeForm = useCallback(() => {
     setAdding(false)
     setEditingId(null)
+    setFormMode("expense")
   }, [])
 
   // Bring the form into view when it opens — most useful when editing an
@@ -214,23 +223,75 @@ export function GroupPage() {
             {formOpen ? (
               <Card>
                 <CardContent className="gap-4 pt-4">
-                  <ExpenseForm
-                    key={editingId ?? "new"}
-                    group={group}
-                    members={members}
-                    defaultPayerId={activeId}
-                    onAdded={async () => {
-                      await refresh()
-                      closeForm()
-                    }}
-                    expense={editingExpense}
-                    onCancel={closeForm}
-                    recent={recent}
-                  />
+                  {/* Expense vs Payment tabs — only when adding; editing an
+                  expense stays on the expense form. */}
+                  {editingExpense === undefined ? (
+                    <div
+                      role="radiogroup"
+                      aria-label={t("paymentTabsAria")}
+                      className="flex gap-1 rounded-md border border-input p-1"
+                    >
+                      {(
+                        [
+                          ["expense", t("modeExpense")],
+                          ["payment", t("modePayment")],
+                        ] as const
+                      ).map(([mode, label]) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          // biome-ignore lint/a11y/useSemanticElements: styled segmented radios
+                          role="radio"
+                          aria-checked={formMode === mode}
+                          onClick={() => setFormMode(mode)}
+                          className={cn(
+                            "flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors",
+                            formMode === mode
+                              ? "bg-primary/10 text-foreground"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {editingExpense === undefined && formMode === "payment" ? (
+                    <PaymentForm
+                      members={members}
+                      transfers={settlement?.transfers ?? null}
+                      baseCurrency={group.baseCurrency}
+                      defaultFromId={activeId}
+                      onRecordPayment={recordPayment}
+                      onCancel={closeForm}
+                    />
+                  ) : (
+                    <ExpenseForm
+                      key={editingId ?? "new"}
+                      group={group}
+                      members={members}
+                      defaultPayerId={activeId}
+                      onAdded={async () => {
+                        await refresh()
+                        closeForm()
+                      }}
+                      expense={editingExpense}
+                      onCancel={closeForm}
+                      recent={recent}
+                    />
+                  )}
                 </CardContent>
               </Card>
             ) : (
-              <Button type="button" size="lg" className="w-full" onClick={() => setAdding(true)}>
+              <Button
+                type="button"
+                size="lg"
+                className="w-full"
+                onClick={() => {
+                  setFormMode("expense")
+                  setAdding(true)
+                }}
+              >
                 {t("addAnExpense")}
               </Button>
             )}

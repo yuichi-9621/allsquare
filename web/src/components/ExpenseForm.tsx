@@ -63,7 +63,10 @@ export function ExpenseForm({
           amount: minorToInput(it.amountMinor, expense.currency),
           memberIds: it.memberIds,
         }))
-      : [{ name: "", amount: "", memberIds: members.map((m) => m.id) }],
+      : // New rows start with NO one assigned: an itemized receipt line is
+        // usually for one or a few people, so opt-in tapping beats deselecting
+        // from everyone (the "Everyone" chip is the shortcut for shared items).
+        [{ name: "", amount: "", memberIds: [] }],
   )
   const [currency, setCurrency] = useState(expense?.currency ?? base)
   const [amount, setAmount] = useState(
@@ -378,24 +381,21 @@ export function ExpenseForm({
           onValueChange={(value) => setSplitKind(value as "equal" | "exact" | "items")}
           className="gap-2.5"
         >
-          <div className="flex items-center gap-2.5">
-            <RadioGroupItem value="equal" id="split-equal" aria-label={t("equal")} />
-            <Label htmlFor="split-equal" className="text-foreground">
-              {t("equal")}
-            </Label>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <RadioGroupItem value="exact" id="split-exact" aria-label={t("exact")} />
-            <Label htmlFor="split-exact" className="text-foreground">
-              {t("exact")}
-            </Label>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <RadioGroupItem value="items" id="split-items" aria-label={t("items")} />
-            <Label htmlFor="split-items" className="text-foreground">
-              {t("items")}
-            </Label>
-          </div>
+          {(
+            [
+              ["equal", "split-equal", t("equal"), t("equalDesc")],
+              ["exact", "split-exact", t("exact"), t("exactDesc")],
+              ["items", "split-items", t("items"), t("itemizeDesc")],
+            ] as const
+          ).map(([value, id, label, desc]) => (
+            <div key={value} className="flex items-start gap-2.5">
+              <RadioGroupItem value={value} id={id} aria-label={label} className="mt-0.5" />
+              <Label htmlFor={id} className="flex flex-col gap-0.5 font-normal text-foreground">
+                <span className="font-medium">{label}</span>
+                <span className="text-sm text-muted-foreground">{desc}</span>
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
       </fieldset>
 
@@ -492,10 +492,7 @@ export function ExpenseForm({
             variant="outline"
             size="sm"
             onClick={() =>
-              setItemRows((rows) => [
-                ...rows,
-                { name: "", amount: "", memberIds: members.map((m) => m.id) },
-              ])
+              setItemRows((rows) => [...rows, { name: "", amount: "", memberIds: [] }])
             }
           >
             {t("addItem")}

@@ -295,17 +295,18 @@ test("items mode: compiles items to exact shares and POSTs both", async () => {
   )
   render(<ExpenseForm group={group} members={members} defaultPayerId="m1" onAdded={vi.fn()} />)
   await user.type(screen.getByRole("textbox", { name: "Description" }), "Dinner")
-  await user.click(screen.getByRole("radio", { name: "Items" }))
+  await user.click(screen.getByRole("radio", { name: "Itemize" }))
 
-  // Item 1: Ramen 14.00 for Alice only (deselect Bob)
+  // Items start with NO one assigned (opt-in). Item 1: Ramen 14.00, tap Alice.
   await user.type(screen.getByRole("textbox", { name: "Item 1 name" }), "Ramen")
   await user.type(screen.getByRole("textbox", { name: "Item 1 amount" }), "14.00")
-  await user.click(screen.getByRole("button", { name: "Item 1: Bob" }))
+  await user.click(screen.getByRole("button", { name: "Item 1: Alice" }))
 
-  // Item 2: Beer 16.00 for everyone (default)
+  // Item 2: Beer 16.00 for everyone (via the Everyone shortcut)
   await user.click(screen.getByRole("button", { name: "Add item" }))
   await user.type(screen.getByRole("textbox", { name: "Item 2 name" }), "Beer")
   await user.type(screen.getByRole("textbox", { name: "Item 2 amount" }), "16.00")
+  await user.click(screen.getByRole("button", { name: "Item 2: everyone" }))
 
   expect(screen.getByTestId("items-total")).toHaveTextContent("Total $30.00")
   await user.click(screen.getByRole("button", { name: "Add expense" }))

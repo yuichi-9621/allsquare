@@ -97,8 +97,11 @@ export const en = {
   category: "Category",
   split: "Split",
   equal: "Equal",
+  equalDesc: "Split the total evenly",
   exact: "Exact",
-  items: "Items",
+  exactDesc: "Type each person's share",
+  items: "Itemize",
+  itemizeDesc: "List items, tap who shared each",
   currency: "Currency",
   itemsLegend: "Items ({currency})",
   itemNName: "Item {n} name",
@@ -127,6 +130,17 @@ export const en = {
   addExpenseError: "Could not add the expense.",
   cancel: "Cancel",
   saveChanges: "Save changes",
+
+  // Payment (settle up recorded from the Add form)
+  modeExpense: "Expense",
+  modePayment: "Payment",
+  recordPayment: "Record a payment",
+  suggestedPayments: "Suggested",
+  paymentFromLabel: "Who paid",
+  paymentToLabel: "Paid to",
+  recordPaymentButton: "Record payment",
+  samePayerPayeeError: "The payer and recipient must be different people.",
+  paymentTabsAria: "Add an expense or a payment",
 
   // MemberPicker
   whoAreYou: "Who are you?",
