@@ -218,6 +218,8 @@ export const ja: Record<MessageKey, string> = {
   youAreAllSquare: "あなたは精算済みです",
   removeTrip: "{title}を削除",
   repaymentTitle: "{from}が{to}に支払いました",
+  settlementBadge: "精算",
+  settlementTitle: "{from} → {to}",
   edit: "編集",
   editAria: "{description}を編集",
   delete: "削除",

@@ -217,6 +217,8 @@ export const en = {
   youAreAllSquare: "You are all square",
   removeTrip: "Remove {title}",
   repaymentTitle: "{from} paid {to}",
+  settlementBadge: "Settlement",
+  settlementTitle: "{from} → {to}",
   edit: "Edit",
   editAria: "Edit {description}",
   delete: "Delete",

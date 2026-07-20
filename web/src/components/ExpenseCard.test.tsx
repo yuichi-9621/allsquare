@@ -34,6 +34,31 @@ const exactExpense: Expense = {
   },
 }
 
+const repayment: Expense = {
+  ...expense,
+  id: "e3",
+  kind: "repayment",
+  amountMinor: 1200,
+  description: "Bob paid Alice",
+  split: { kind: "exact", shares: [{ memberId: "m2", amountMinor: 1200 }] },
+}
+
+test("renders a repayment as a settlement: badge, arrow title, no breakdown", () => {
+  render(<ExpenseCard expense={repayment} members={members} baseCurrency="USD" />)
+  screen.getByText("Settlement")
+  // payer m1 (Alice) settled with recipient m2 (Bob): "Alice → Bob"
+  screen.getByText("Alice → Bob")
+  // a settlement is A paying B in full, so the per-person breakdown is omitted
+  expect(screen.queryByRole("list")).toBeNull()
+  // and the "Alice paid" expense sub-line is not rendered
+  expect(
+    screen.queryByText(
+      (_, el) =>
+        el?.tagName === "P" && el.textContent?.replace(/\s+/g, " ").trim() === "Alice paid",
+    ),
+  ).toBeNull()
+})
+
 test("shows the description, total (with base), and who paid", () => {
   render(<ExpenseCard expense={expense} members={members} baseCurrency="USD" />)
   screen.getByText("Taxi")

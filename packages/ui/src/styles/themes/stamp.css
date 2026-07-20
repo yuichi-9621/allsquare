@@ -24,9 +24,9 @@
   --border-solid: 90 42% 11%; /* ink hairlines, used at low alpha */
   --input: 52 30% 80%;
   --ring: 92 45% 26%; /* deep sage focus */
-  --foil: 46 65% 13%; /* dark bronze on cover (4.5:1) */
-  --success: 100 45% 13%; /* dark leaf on cover (4.6:1) */
-  --danger: 12 68% 18%; /* dark brick on cover (4.7:1) */
+  --foil: 177 58% 12%; /* dark petrol teal on cover (4.7:1) */
+  --success: 103 44% 13%; /* dark leaf on cover (4.8:1) */
+  --danger: 0 52% 17%; /* dark clay-rose on cover (5.2:1) */
   --radius: 8px;
 }
 
@@ -37,7 +37,7 @@
   --muted-foreground: 57 23% 40%; /* olive-grey #7C7A4E */
   --border-solid: 88 39% 15%; /* ink hairlines, used at low alpha */
   --secondary: 92 32% 30%; /* moss #4B6534; cream label 6.2:1 */
-  --foil: 45 74% 30%; /* antique brass #866913 (4.9:1 on cream) */
-  --success: 94 49% 33%;
-  --danger: 14 60% 33%; /* brick #873922 (7.5:1 on cream) */
+  --foil: 177 41% 31%; /* petrol teal #2F6F6C (5.5:1 on cream) */
+  --success: 100 40% 30%; /* leaf #426B2E (5.9:1 on cream) */
+  --danger: 0 37% 46%; /* clay rose #A14A4A (5.6:1 on cream) */
 }

@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@allsquare/ui"
 import { categoryOf } from "../lib/categories"
 import { useT } from "../lib/i18n"
 import { convertMinor, splitEqualMinor } from "../lib/money"
@@ -41,23 +41,32 @@ export function ExpenseCard({
   // English data ("X paid Y") so the ledger stays locale-independent; the
   // UI renders that row's title from the kind flag + payer/recipient ids
   // instead, so it follows the active locale.
+  const isRepayment = expense.kind === "repayment"
   const repaymentShareId =
-    expense.kind === "repayment" && expense.split.kind === "exact"
-      ? expense.split.shares[0]?.memberId
-      : undefined
+    isRepayment && expense.split.kind === "exact" ? expense.split.shares[0]?.memberId : undefined
+  const fromName = nameOf.get(expense.payerId) ?? "?"
+  const toName = repaymentShareId ? (nameOf.get(repaymentShareId) ?? "?") : "?"
+  // Settlements read as a quieter, tinted card: a transfer arrow "A → B" title
+  // (with a full-sentence aria label for screen readers), a teal "Settlement"
+  // tag, and no per-person breakdown — a repayment is just A paying B in full.
   const title =
-    expense.kind === "repayment" && repaymentShareId
-      ? t("repaymentTitle", {
-          from: nameOf.get(expense.payerId) ?? "?",
-          to: nameOf.get(repaymentShareId) ?? "?",
-        })
+    isRepayment && repaymentShareId
+      ? t("settlementTitle", { from: fromName, to: toName })
       : expense.description
 
   return (
-    <Card>
+    <Card className={isRepayment ? "border-foil/30 bg-foil/[0.05]" : undefined}>
       <CardHeader>
-        <CardTitle>
-          {expense.kind === "repayment" ? null : (
+        <CardTitle
+          {...(isRepayment && repaymentShareId
+            ? { "aria-label": t("repaymentTitle", { from: fromName, to: toName }) }
+            : {})}
+        >
+          {isRepayment ? (
+            <Badge variant="foil" className="mr-2 align-middle">
+              {t("settlementBadge")}
+            </Badge>
+          ) : (
             <span aria-hidden className="mr-1.5">
               {categoryOf(expense.category)?.emoji}
             </span>
@@ -73,16 +82,16 @@ export function ExpenseCard({
         />
       </CardHeader>
       <CardContent>
-        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <MemberAvatar members={members} memberId={expense.payerId} />
-          <span>
-            <span className="font-semibold text-foreground">
-              {nameOf.get(expense.payerId) ?? "?"}
+        {isRepayment ? null : (
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MemberAvatar members={members} memberId={expense.payerId} />
+            <span>
+              <span className="font-semibold text-foreground">{fromName}</span>
+              {t("expensePaidSuffix")}
             </span>
-            {t("expensePaidSuffix")}
-          </span>
-        </p>
-        {expense.items?.length ? (
+          </p>
+        )}
+        {isRepayment ? null : expense.items?.length ? (
           <ul
             aria-label={`Items for ${expense.description}`}
             className="flex flex-col gap-1 border-l-2 border-foil/50 pl-3"
