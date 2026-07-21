@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Allsquare">
-  <rect width="512" height="512" rx="113" fill="#7BA05B" />
-  <rect x="128" y="178" width="256" height="59" rx="29" fill="#FEFAE0" />
-  <rect x="128" y="275" width="256" height="59" rx="29" fill="#FEFAE0" />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Allsquare"><rect width="512" height="512" rx="113" fill="#123F3C"/><rect x="128" y="138" width="256" height="74" rx="37" fill="#FEFAE0"/><rect x="128" y="299" width="256" height="74" rx="37" fill="#FEFAE0"/></svg>
