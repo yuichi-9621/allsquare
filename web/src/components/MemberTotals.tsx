@@ -64,7 +64,11 @@ export function MemberTotals({
                   />
                   {m.name}
                 </span>
-                <MoneyAmount amountMinor={paid} currency={baseCurrency} className="text-sm" />
+                <MoneyAmount
+                  amountMinor={paid}
+                  currency={baseCurrency}
+                  className="text-sm text-foil"
+                />
                 <MoneyAmount
                   amountMinor={share}
                   currency={baseCurrency}

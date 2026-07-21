@@ -64,7 +64,11 @@ export function SettleRow({
           {to}
         </span>
         <div className="flex shrink-0 items-center gap-2.5">
-          <MoneyAmount amountMinor={transfer.amountMinor} currency={baseCurrency} />
+          <MoneyAmount
+            amountMinor={transfer.amountMinor}
+            currency={baseCurrency}
+            className="text-foil"
+          />
           {target?.kind === "link" ? (
             <Button asChild variant="secondary" size="sm">
               <a
