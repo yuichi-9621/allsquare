@@ -70,7 +70,10 @@ export function ExpenseCard({
               className="mr-2 align-middle"
             />
           ) : (
-            <span aria-hidden className="mr-1.5">
+            <span
+              aria-hidden
+              className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent/25 align-middle text-[0.8rem]"
+            >
               {categoryOf(expense.category)?.emoji}
             </span>
           )}
@@ -81,7 +84,7 @@ export function ExpenseCard({
           currency={expense.currency}
           baseCurrency={baseCurrency}
           baseValue={baseMinor}
-          className="text-base"
+          className="text-base text-foil"
         />
       </CardHeader>
       <CardContent>

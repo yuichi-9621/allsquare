@@ -61,7 +61,7 @@ export function SpendingBreakdown({
                 <MoneyAmount
                   amountMinor={r.totalMinor}
                   currency={baseCurrency}
-                  className="text-sm"
+                  className="text-sm text-foil"
                 />
               </div>
               <div
